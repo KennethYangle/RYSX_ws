@@ -177,7 +177,10 @@ class Utils(object):
             # PI
             self.integral_cam = self.integral_cam + self.Ki_nu_cam.dot(i_err_body)*dt
             self.SatIntegral(self.integral_cam, 0.5, -0.5)
-            self.ref_vel_cam_body = (self.Kp_nu_cam.dot(i_err_body) + self.integral_cam) * np.linalg.norm(self.rpos_est_k)
+            P_cam_component = self.Kp_nu_cam.dot(i_err_body)
+            I_cam_component = self.integral_cam
+            print("P_cam_component: {}\nI_cam_component: {}".format(P_cam_component, I_cam_component))
+            self.ref_vel_cam_body = (P_cam_component + I_cam_component) * self.SatRange(np.linalg.norm(self.rpos_est_k), 4, 1)
             # Is use camera information to control the body's lateral speed.
             if not self.USE_CAM_FOR_X:
                 self.ref_vel_cam_body[0] = 0
@@ -207,7 +210,9 @@ class Utils(object):
             yaw_cam = -i_err[0]
             print("yaw_cam: {}".format(yaw_cam))
             # cmd_yawrate = cmd_yawrate + self.Kp_yaw_cam*yaw_cam
-            # cmd_yawrate = self.Kp_yaw_cam*yaw_cam
+            cmd_yawrate = self.Kp_yaw_cam*yaw_cam
+        else:
+            cmd_yawrate = 0
 
         cmd_vel = self.sat(ref_vel_enu, 3*car_velocity)
         return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
@@ -277,4 +282,11 @@ class Utils(object):
                 a[i] = up
             elif a[i] < down:
                 a[i] = down
+        return a
+
+    def SatRange(self, a, up, down):
+        if a > up:
+            a = up
+        elif a < down:
+            a = down
         return a

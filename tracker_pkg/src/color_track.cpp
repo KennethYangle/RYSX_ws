@@ -132,7 +132,7 @@ Point3d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int highs, int highv)
 {
     // ros::Time begin = ros::Time::now();
-    Point3d xy;
+    Point3d xy(0,0,0);
 	Mat imgHSV;
 	vector<Mat> hsvSplit;
 	cvtColor(frame, imgHSV, COLOR_BGR2HSV);
@@ -199,26 +199,88 @@ Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int h
     cv::Mat3b output_frame;
     output_frame = frame.clone();
     xy = yaed->DrawDetectedEllipses(output_frame,ellsYaed,5);
-    
-    circle(output_frame, Point(320,240), 4, Scalar(255, 0, 0), -1, 5, 0);
-    // imshow("Demo",frame);
-    // imshow("frame_rgb_l",frame_rgb_l);
-    imshow("output_frame",output_frame);
-    
-    int c = cvWaitKey(1);
-    if(c == (int)' ')
-    {
-        cvWaitKey(0);
-    }
-    if(xy.x>0 && xy.y>0)
-    {
-        confidence = 1;
-    }
-    else{
-        confidence = 0;
-    }
 
-    return xy;
+    if (xy.x<=0) {
+        
+	    // //开操作 (去除一些噪点)
+	    // Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
+	    // morphologyEx(imgThresholded, imgThresholded, MORPH_OPEN, element);
+        vector<Vec3f> circles;
+
+        HoughCircles(imgThresholded, circles, CV_HOUGH_GRADIENT, 
+                        3, //累加器分辨率
+                        20, //两园间最小距离
+                        160, // canny高阈值
+                        80, //最小通过数
+                        30, 300 );  //最小和最大半径
+        test++;
+        cout<<"------->circles.size() :"<<circles.size()<<endl;
+
+        Point centexy(0,0);
+        average_radius = 0;
+        
+        for (size_t i = 0; i < circles.size(); i++)
+        {
+            //提取出圆心坐标  
+            Point center(round(circles[i][0]), round(circles[i][1]));
+            //提取出圆半径  
+            int radius = round(circles[i][2]);
+            // circle(frame, center, 3, Scalar(0, 255, 0), -1, 4, 0);
+            // circle(frame, center, radius, Scalar(0, 255, 0), 3, 4, 0);
+            centexy.x += center.x;
+            centexy.y += center.y;
+            average_radius += radius;
+
+        }
+        if(circles.size()>0)
+        {
+            bbox = 1;
+            confidence = 1;
+            centexy.x = centexy.x/circles.size();
+            centexy.y = centexy.y/circles.size();
+            average_radius = average_radius/circles.size();
+            circle(output_frame, centexy, 3, Scalar(0, 0, 255), -1, 4, 0);
+        }
+        else
+        {
+            bbox = 0;
+            average_radius = 0;
+            confidence = 0;
+        }
+        circle(output_frame, Point(320,240), 3, Scalar(0, 255, 0), -1, 4, 0);
+        imshow("output_frame", output_frame);
+        // ros::Time end = ros::Time::now();
+        // cout<< "------------------time cost :"<< end-begin <<endl;
+        waitKey(1);
+        Point3d return_centerxy;
+        return_centerxy.x = centexy.x;
+        return_centerxy.y = centexy.y;
+        return_centerxy.z = average_radius;
+        return return_centerxy;
+    }
+    else
+    {
+        circle(output_frame, Point(320,240), 4, Scalar(255, 0, 0), -1, 5, 0);
+        // imshow("Demo",frame);
+        // imshow("frame_rgb_l",frame_rgb_l);
+        imshow("output_frame",output_frame);
+        
+        int c = cvWaitKey(1);
+        if(c == (int)' ')
+        {
+            cvWaitKey(0);
+        }
+        if(xy.x>0 && xy.y>0)
+        {
+            confidence = 1;
+        }
+        else{
+            confidence = 0;
+        }
+
+        return xy;
+    }
+        
 }
 
 
@@ -243,7 +305,7 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 
 	// calc center point
 	// colorBlock3 = frameToCoordinate(3, imgCor, 170, 150, 10, 181, 256, 256);
-    colorBlock3 = yeadCircleCalc(imgCor, 170, 150, 10, 181, 256, 256);
+    colorBlock3 = yeadCircleCalc(imgCor, 170, 200, 10, 181, 256, 256);
     
     // ros::Time end_image2 = ros::Time::now();
     // cout<< "------------------time cost2 :"<< end_image2-begin_image <<endl;
