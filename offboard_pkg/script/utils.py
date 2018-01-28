@@ -175,6 +175,7 @@ class Utils(object):
         ref_vel_body = P_component + I_component + D_component + F_component
         print("P_component: {}\nI_component: {}\nD_component: {}\nF_component: {}".format(P_component, I_component, D_component, F_component))
         ref_vel_enu = pos_info["mav_R"].dot(ref_vel_body)
+        ref_vel_enu[2] = ref_vel_body[2]
         if not self.USE_GPS:
             ref_vel_enu = np.array([0, 0, 0])
         print("ref_vel_enu: {}".format(ref_vel_enu))
