@@ -73,7 +73,7 @@ Point3d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
     // morphologyEx(imgThresholded, imgThresholded, MORPH_CLOSE, kernel);
 	imshow("red block", imgThresholded);
 	
-    ros::Time begin = ros::Time::now();
+    // ros::Time begin = ros::Time::now();
 	vector<Vec3f> circles;
 
 	HoughCircles(imgThresholded, circles, CV_HOUGH_GRADIENT, 
@@ -116,10 +116,10 @@ Point3d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 		average_radius = 0;
 		confidence = 0;
 	}
-	
+	circle(frame, Point(320,240), 3, Scalar(0, 255, 0), -1, 4, 0);
 	imshow("circle", frame);
-    ros::Time end = ros::Time::now();
-    cout<< "------------------time cost :"<< end-begin <<endl;
+    // ros::Time end = ros::Time::now();
+    // cout<< "------------------time cost :"<< end-begin <<endl;
 	waitKey(1);
     Point3d return_centerxy;
     return_centerxy.x = centexy.x;
@@ -131,7 +131,7 @@ Point3d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 //yead circle 
 Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int highs, int highv)
 {
-    ros::Time begin = ros::Time::now();
+    // ros::Time begin = ros::Time::now();
     Point3d xy;
 	Mat imgHSV;
 	vector<Mat> hsvSplit;
@@ -143,8 +143,8 @@ Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int h
 	merge(hsvSplit, imgHSV);
 	Mat1b imgThresholded;
 	inRange(imgHSV, Scalar(lowh, lows, lowv), Scalar(highh, highs, highv), imgThresholded); //Threshold the image
-    ros::Time end = ros::Time::now();
-    cout<< "------------------time cost :"<< end-begin <<endl;
+    // ros::Time end = ros::Time::now();
+    // cout<< "------------------time cost :"<< end-begin <<endl;
 	
 	// //开操作 (去除一些噪点)
 	// Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
@@ -189,7 +189,6 @@ Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int h
     // cv::threshold(frame_rgb_l,frame_rgb_l,200,255,THRESH_BINARY);
     
     
-    
     vector<Ellipse> ellsYaed;
     // Mat1b gray2 = frame_rgb_l.clone();
     yaed->Detect(imgThresholded, ellsYaed);
@@ -201,7 +200,7 @@ Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int h
     output_frame = frame.clone();
     xy = yaed->DrawDetectedEllipses(output_frame,ellsYaed,5);
     
-
+    circle(output_frame, Point(320,240), 3, Scalar(255, 0, 0), -1, 4, 0);
     // imshow("Demo",frame);
     // imshow("frame_rgb_l",frame_rgb_l);
     imshow("output_frame",output_frame);
@@ -210,6 +209,13 @@ Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int h
     if(c == (int)' ')
     {
         cvWaitKey(0);
+    }
+    if(xy.x>0 && xy.y>0)
+    {
+        confidence = 1;
+    }
+    else{
+        confidence = 0;
     }
 
     return xy;
@@ -226,20 +232,20 @@ void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
 void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 {
     if (!depth_initialize) return; 
-    ros::Time begin_image = ros::Time::now();
+    // ros::Time begin_image = ros::Time::now();
 	//red
 	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(imgae_msg, sensor_msgs::image_encodings::BGR8);
 	Mat imgOriginal = cv_ptr -> image;
 	Mat imgCor;
 	flip(imgOriginal, imgCor, -1);
-    ros::Time end_image1 = ros::Time::now();
+    // ros::Time end_image1 = ros::Time::now();
     // cout<< "------------------time cost1 :"<< end_image1-begin_image <<endl;
 
 	// calc center point
 	// colorBlock3 = frameToCoordinate(3, imgCor, 170, 150, 10, 181, 256, 256);
     colorBlock3 = yeadCircleCalc(imgCor, 170, 150, 10, 181, 256, 256);
     
-    ros::Time end_image2 = ros::Time::now();
+    // ros::Time end_image2 = ros::Time::now();
     // cout<< "------------------time cost2 :"<< end_image2-begin_image <<endl;
 	// publish center point
 	std_msgs::Float32MultiArray msg;
@@ -366,7 +372,7 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
     pub.publish(depth);
     pub_left.publish(depth_left);
     pub_right.publish(depth_right);
-    ros::Time end_image3 = ros::Time::now();
+    // ros::Time end_image3 = ros::Time::now();
     // cout<< "------------------time cost3 :"<< end_image3-begin_image <<endl;
 }
 

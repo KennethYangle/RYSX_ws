@@ -83,7 +83,7 @@ def car_pose_cb(msg):
 def car_vel_cb(msg):
     global car_vel, car_vel_k, is_initialize_4
     is_initialize_4 = True
-    car_vel = [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z]
+    car_vel = np.array([msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z])
     car_vel_k = 0.5*np.array(car_vel) + 0.5*car_vel_k
 
 def rcin_cb(msg):
@@ -166,7 +166,7 @@ def minAngleDiff(a, b):
     diff = a - b
     if diff < 0:
         diff += 2*np.pi
-    if diff < np.pi:
+    if diff > 0 and diff < np.pi:
         return diff
     else:
         return diff - 2*np.pi
