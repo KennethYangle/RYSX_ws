@@ -52,6 +52,7 @@ class Utils(object):
         self.v21 = 0.0
         self.v12 = 0.0
         self.v22 = 0.0
+        self.i_err = np.array([0.0, 0.0, 0.0])
 
     def sat(self, a, maxv):
         n = np.linalg.norm(a)
@@ -150,12 +151,15 @@ class Utils(object):
         print("dlt_pos: {}".format(dlt_pos))
         
         dlt_pos_body = pos_info["mav_R"].T.dot(dlt_pos)
-        dlt_pos_body_han = np.array([0.0,0.0,0.0])
-        dlt_pos_body_han[0] = self.TD0(dlt_pos_body[0], 20.0, 0.02)
-        dlt_pos_body_han[1] = self.TD1(dlt_pos_body[1], 20.0, 0.02)
-        dlt_pos_body_han[2] = self.TD2(dlt_pos_body[2], 20.0, 0.02)
-        print("dlt_pos_body: {}".format(dlt_pos_body))
-        print("dlt_pos_body_han: {}".format(dlt_pos_body_han))
+        # dlt_pos_body_han = np.array([0.0,0.0,0.0])
+        # dlt_pos_body_han[0] = self.TD0(dlt_pos_body[0], 20.0, 0.02)
+        # dlt_pos_body_han[1] = self.TD1(dlt_pos_body[1], 20.0, 0.02)
+        # dlt_pos_body_han[2] = self.TD2(dlt_pos_body[2], 20.0, 0.02)
+        # print("dlt_pos_body: {}".format(dlt_pos_body))
+        # print("dlt_pos_body_han: {}".format(dlt_pos_body_han))
+        # self.dlt_pos_body_flt = 0.85*self.dlt_pos_body_flt + 0.15*dlt_pos_body
+        # print("dlt_pos_body: {}".format(dlt_pos_body))
+        # print("dlt_pos_body_flt: {}".format(self.dlt_pos_body_flt))
         if np.linalg.norm(pos_info["car_vel"]) > 2:
             self.integral = self.integral + self.Ki.dot(dlt_pos_body)*dt
         # integral saturation
@@ -181,8 +185,9 @@ class Utils(object):
             self.track_quality_k = 0
         if cam_is_ok:
             self.integral =np.array([0, 0, 0])
-            i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
-            i_err_body = pos_info["R_bc"].dot(i_err) - self.cam_offset
+            if pos_i[0]>0:
+                self.i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
+            i_err_body = pos_info["R_bc"].dot(self.i_err) - self.cam_offset
             i_err_body[1] = 0
             print("i_err_body: {}".format(i_err_body))
             i_err_enu = pos_info["mav_R"].dot(i_err_body)
@@ -227,7 +232,7 @@ class Utils(object):
 
         cmd_yawrate = self.sat(self.P*pos_info["rel_yaw"], 2)
         if cam_is_ok:
-            yaw_cam = -i_err[0]
+            yaw_cam = -self.i_err[0]
             print("yaw_cam: {}".format(yaw_cam))
             # cmd_yawrate = cmd_yawrate + self.Kp_yaw_cam*yaw_cam
             cmd_yawrate = self.Kp_yaw_cam*yaw_cam
