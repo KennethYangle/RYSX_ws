@@ -44,7 +44,14 @@ class Utils(object):
         self.RSENSE_GPS_COM = params["RSENSE_GPS_COM"]
         self.I_saturation_limit = params["I_saturation_limit"]
         self.Kp_lr_depth = params["Kp_lr_depth"]
-
+        self.integral_lat = 0.0
+        self.cor_lateral = 0.0
+        self.v10 = 0.0
+        self.v20 = 0.0
+        self.v11 = 0.0
+        self.v21 = 0.0
+        self.v12 = 0.0
+        self.v22 = 0.0
 
     def sat(self, a, maxv):
         n = np.linalg.norm(a)
@@ -137,10 +144,18 @@ class Utils(object):
         print("avoidance: {}".format(avo_cmd))
 
         # calc position error betweent mav and virtual point
+        cor_hight = self.SatRange(np.linalg.norm(self.rpos_est_k)*np.sin(pos_info["mav_pitch"]), 1, 0)
+        print("cor_hight: {}".format(cor_hight))
         dlt_pos = self.rpos_est_k + pos_info["virtual_car_pos"] + np.array([0, 0, self.ref_vel_cam_body[2]])
         print("dlt_pos: {}".format(dlt_pos))
         
         dlt_pos_body = pos_info["mav_R"].T.dot(dlt_pos)
+        dlt_pos_body_han = np.array([0.0,0.0,0.0])
+        dlt_pos_body_han[0] = self.TD0(dlt_pos_body[0], 20.0, 0.02)
+        dlt_pos_body_han[1] = self.TD1(dlt_pos_body[1], 20.0, 0.02)
+        dlt_pos_body_han[2] = self.TD2(dlt_pos_body[2], 20.0, 0.02)
+        print("dlt_pos_body: {}".format(dlt_pos_body))
+        print("dlt_pos_body_han: {}".format(dlt_pos_body_han))
         if np.linalg.norm(pos_info["car_vel"]) > 2:
             self.integral = self.integral + self.Ki.dot(dlt_pos_body)*dt
         # integral saturation
@@ -151,6 +166,8 @@ class Utils(object):
         I_component = self.integral
         D_component = self.D*np.array(pos_info["mav_R"].T.dot(pos_info["rel_vel"]))
         F_component = pos_info["mav_R"].T.dot(pos_info["car_vel"])
+        D_component[2] = 0
+        F_component[2] = 0
         ref_vel_body = P_component + I_component + D_component + F_component
         print("P_component: {}\nI_component: {}\nD_component: {}\nF_component: {}".format(P_component, I_component, D_component, F_component))
         ref_vel_enu = pos_info["mav_R"].dot(ref_vel_body)
@@ -291,3 +308,36 @@ class Utils(object):
         elif a < down:
             a = down
         return a
+
+    def TD0(self, v, r, h):
+        fv = self.fhan(self.v10 - v, self.v20, r, h)
+        v1_ = self.v10 + h*self.v20
+        v2_ = self.v20 + h*fv
+        self.v10 = v1_
+        self.v20 = v2_
+        return v1_ + v2_*h
+    
+    def TD1(self, v, r, h):
+        fv = self.fhan(self.v11 - v, self.v21, r, h)
+        self.v11  = self.v11 + h*self.v21
+        self.v21 = self.v21 + h*fv
+        return self.v11 + self.v21*h
+    
+    def TD2(self, v, r, h):
+        fv = self.fhan(self.v12 - v, self.v22, r, h)
+        self.v12  = self.v12 + h*self.v22
+        self.v22 = self.v22 + h*fv
+        return self.v12 + self.v22*h
+    
+    def fhan(self, x1, x2, r0, h0):
+        d = r0*h0*h0
+        a0 = h0*x2
+        y = x1 + a0
+        a1 = np.sqrt(d*(d + 8.0*np.abs(y)))
+        a2 = a0 + 1.0*np.sign(y)*(a1 - d)/2.0
+        sy = 1.0*(np.sign(y+d) - np.sign(y-d))/2.0
+        a = (a0 + y - a2)*sy + a2
+        sa = 1.0*(np.sign(a+d) - np.sign(a-d))/2.0
+        y = -r0*(1.0*a/d - np.sign(a))*sa - r0*np.sign(a)
+
+        return y
