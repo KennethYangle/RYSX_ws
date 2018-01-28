@@ -46,6 +46,7 @@ depth = -1
 depth_left = -1
 depth_right = -1
 original_offset = np.array([0, 0, 0])
+dlt_home_yaw = 0
 
 def spin():
     rospy.spin()
@@ -285,6 +286,7 @@ if __name__=="__main__":
 
         if ch11 == 0:
             original_offset = np.array(car_pos) - np.array(mav_pos)
+            # dlt_home_yaw = minAngleDiff(car_home_yaw, mav_home_yaw)
             print("GPS calibration.")
 
         # if ch9 == 0 or ch9 == 2:
@@ -319,7 +321,6 @@ if __name__=="__main__":
             #     pass
 
 
-        dlt_home_yaw = minAngleDiff(car_home_yaw, mav_home_yaw)
         car_yaw_cor = angleLimiting(car_yaw - dlt_home_yaw)
         # # GPS course
         # if np.linalg.norm([car_vel_k[0], car_vel_k[1]]) > 2:

@@ -3,7 +3,7 @@
     "MODE": "RealFlight",
     "car_velocity": 1,
     "follow_mode": 0,
-    "follow_distance": 3,
+    "follow_distance": 2.5,
     "FLIGHT_H": 3,
     "Utils": {
         "P": 0.5,
@@ -22,11 +22,11 @@
         "Kp": [[1.5, 0, 0], [0, 1.5, 0], [0, 0, 0.4]],
         "Ki": [[0.3, 0, 0], [0, 0.3, 0], [0, 0, 0.1]],
         "I_saturation_limit": 2,
-        "Kp_nu_cam": [[0.008, 0, 0], [0, 0.008, 0], [0, 0, 0.002]],
-        "Ki_nu_cam": [[0.0002, 0, 0], [0, 0.0002, 0], [0, 0, 0.0005]],
+        "Kp_nu_cam": [[0.0008, 0, 0], [0, 0.0008, 0], [0, 0, 0.0004]],
+        "Ki_nu_cam": [[0.0001, 0, 0], [0, 0.0001, 0], [0, 0, 0.0001]],
         "Kp_lr_depth": 1.0,
         "Kp_yaw_cam": 0.0015,
-        "cam_offset": [0, 0, 20],
+        "cam_offset": [0, 0, 0],
         "CAM_GPS_COM": true,
         "cam_gps_err_kp": [[5, 0, 0], [0, 5, 0], [0, 0, 5]],
         "RSENSE_GPS_COM": true,
@@ -34,7 +34,7 @@
         "USE_DEPTH_FOR_X": false,
         "USE_GPS": true,
         "USE_REALSENSE": false,
-        "USE_CAMERA": true
+        "USE_CAMERA": false
     },
     "Simulation": {
         "GPS_offset": [0.5, 0.5, 0],

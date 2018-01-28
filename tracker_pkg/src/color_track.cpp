@@ -200,7 +200,7 @@ Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int h
     output_frame = frame.clone();
     xy = yaed->DrawDetectedEllipses(output_frame,ellsYaed,5);
     
-    circle(output_frame, Point(320,240), 3, Scalar(255, 0, 0), -1, 4, 0);
+    circle(output_frame, Point(320,240), 4, Scalar(255, 0, 0), -1, 5, 0);
     // imshow("Demo",frame);
     // imshow("frame_rgb_l",frame_rgb_l);
     imshow("output_frame",output_frame);
