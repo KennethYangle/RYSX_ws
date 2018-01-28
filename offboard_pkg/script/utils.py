@@ -195,7 +195,7 @@ class Utils(object):
                 print("cam_gps_err_up: {}".format(self.cam_gps_err_up))
             # PI
             self.integral_cam = self.integral_cam + self.Ki_nu_cam.dot(i_err_body)*dt
-            self.SatIntegral(self.integral_cam, 0.5, -0.5)
+            self.SatIntegral(self.integral_cam, 1, -1)
             self.P_cam_component = self.Kp_nu_cam.dot(i_err_body)
             self.I_cam_component = self.integral_cam
             print("P_cam_component: {}\nI_cam_component: {}".format(self.P_cam_component, self.I_cam_component))
