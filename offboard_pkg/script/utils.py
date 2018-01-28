@@ -24,6 +24,8 @@ class Utils(object):
         self.Kp_nu_cam = np.array(params["Kp_nu_cam"])
         self.Ki_nu_cam = np.array(params["Ki_nu_cam"])
         self.integral_cam = np.array([0, 0, 0])
+        self.P_cam_component = 0
+        self.I_cam_component = 0
         self.Kp_yaw_cam = params["Kp_yaw_cam"]
         self.rpos_est_k = np.array([0, 0, 0])
         self.cam_offset = np.array(params["cam_offset"]) # cam distance to center on body coordinate in pixel uint, if z > 0, object appears at the bottom of the image
@@ -135,7 +137,7 @@ class Utils(object):
         print("avoidance: {}".format(avo_cmd))
 
         # calc position error betweent mav and virtual point
-        dlt_pos = self.rpos_est_k + pos_info["virtual_car_pos"]
+        dlt_pos = self.rpos_est_k + pos_info["virtual_car_pos"] + np.array([0, 0, self.ref_vel_cam_body[2]])
         print("dlt_pos: {}".format(dlt_pos))
         
         dlt_pos_body = pos_info["mav_R"].T.dot(dlt_pos)
@@ -177,10 +179,10 @@ class Utils(object):
             # PI
             self.integral_cam = self.integral_cam + self.Ki_nu_cam.dot(i_err_body)*dt
             self.SatIntegral(self.integral_cam, 0.5, -0.5)
-            P_cam_component = self.Kp_nu_cam.dot(i_err_body)
-            I_cam_component = self.integral_cam
-            print("P_cam_component: {}\nI_cam_component: {}".format(P_cam_component, I_cam_component))
-            self.ref_vel_cam_body = (P_cam_component + I_cam_component) * self.SatRange(np.linalg.norm(self.rpos_est_k), 4, 1)
+            self.P_cam_component = self.Kp_nu_cam.dot(i_err_body)
+            self.I_cam_component = self.integral_cam
+            print("P_cam_component: {}\nI_cam_component: {}".format(self.P_cam_component, self.I_cam_component))
+            self.ref_vel_cam_body = (self.P_cam_component + self.I_cam_component) * self.SatRange(np.linalg.norm(self.rpos_est_k), 4, 1)
             # Is use camera information to control the body's lateral speed.
             if not self.USE_CAM_FOR_X:
                 self.ref_vel_cam_body[0] = 0
@@ -196,12 +198,13 @@ class Utils(object):
             print("ref_vel_body_gps: {}".format(ref_vel_body))
             if self.USE_CAM_FOR_X or self.USE_DEPTH_FOR_X:
                 ref_vel_body[0] = (1 - self.track_quality_k) * ref_vel_body[0] + self.track_quality_k * self.ref_vel_cam_body[0]
-            ref_vel_body[2] = (1 - self.track_quality_k) * ref_vel_body[2] + self.track_quality_k * self.ref_vel_cam_body[2]
+            # ref_vel_body[2] = (1 - self.track_quality_k) * ref_vel_body[2] + self.track_quality_k * self.ref_vel_cam_body[2]
             print("ref_vel_body_cam: {}".format(ref_vel_body))
             ref_vel_enu = pos_info["mav_R"].dot(ref_vel_body)
         else:
             self.integral_cam = np.array([0, 0, 0])
             self.ref_vel_cam_body[1] = 0
+            self.ref_vel_cam_body[2] *= 0.98
             ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * pos_info["mav_R"].dot(self.ref_vel_cam_body)
 
 
@@ -211,8 +214,6 @@ class Utils(object):
             print("yaw_cam: {}".format(yaw_cam))
             # cmd_yawrate = cmd_yawrate + self.Kp_yaw_cam*yaw_cam
             cmd_yawrate = self.Kp_yaw_cam*yaw_cam
-        else:
-            cmd_yawrate = 0
 
         cmd_vel = self.sat(ref_vel_enu, 3*car_velocity)
         return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
