@@ -285,7 +285,7 @@ if __name__=="__main__":
             if cnt % 100 == 0:
                 print("is_initialize all True")
         
-        car_pos_alpha = 0.2
+        car_pos_alpha = 0.5
         car_pos = (1-car_pos_alpha)*car_pos + car_pos_alpha*car_pos_raw
         car_vel = (1-car_pos_alpha)*car_vel + car_pos_alpha*car_vel_raw
     

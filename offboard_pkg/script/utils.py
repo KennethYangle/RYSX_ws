@@ -226,7 +226,7 @@ class Utils(object):
             self.integral_cam = np.array([0.0, 0.0, 0.0])
             self.ref_vel_cam_body[1] = 0
             self.ref_vel_cam_body[2] *= 0.98
-            ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * pos_info["mav_R"].dot(self.ref_vel_cam_body)
+            ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * self.ref_vel_cam_body
 
 
         cmd_yawrate = self.sat(self.P*pos_info["rel_yaw"], 2)
