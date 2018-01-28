@@ -132,7 +132,7 @@ class GeographicalFenceState(object):
     def go_home(self, pos_info):
         self.stateMachine.setState(self.stateMachine.getHomewardState())
     def flightInward(self, pos, geo_fence):
-        cmd = np.array([0,0,0])
+        cmd = np.array([0.0, 0.0, 0.0])
         if pos[0] < geo_fence[0]:
             cmd += np.array([20,0,0])
         elif pos[0] > geo_fence[2]:

@@ -31,9 +31,11 @@ mav_R = np.zeros((3,3))
 mav_home_pos = [0, 0, 0]
 mav_home_yaw = 0
 mav_home_geo = [0, 0, 0]
-car_pos = [0, 0, 0]
-car_vel = [0, 0, 0]
-car_vel_k = np.array([0,0,0])
+car_pos_raw = np.array([0.0, 0.0, 0.0])
+car_pos = np.array([0.0, 0.0, 0.0])
+car_vel_raw = np.array([0.0, 0.0, 0.0])
+car_vel = np.array([0.0, 0.0, 0.0])
+car_vel_k = np.array([0.0, 0.0, 0.0])
 car_yaw = 0
 car_home_pos = [0, 0, 0]
 car_home_yaw = 0
@@ -46,7 +48,7 @@ home_dx, home_dy = 0, 0
 depth = -1
 depth_left = -1
 depth_right = -1
-original_offset = np.array([0, 0, 0])
+original_offset = np.array([0.0, 0.0, 0.0])
 dlt_home_yaw = 0
 
 def spin():
@@ -76,18 +78,18 @@ def mav_vel_cb(msg):
     mav_vel = [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z]
 
 def car_pose_cb(msg):
-    global car_pos, car_yaw, q, sumQ, is_initialize_3
+    global car_pos_raw, car_yaw, q, sumQ, is_initialize_3
     is_initialize_3 = True
-    car_pos = [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]
+    car_pos_raw = np.array([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])
     q0, q1, q2, q3 = msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z
     car_yaw = math.atan2(2*(q0*q3+q1*q2), 1-2*(q2*q2+q3*q3))
     # car_yaw = alpha * yaw + (1 - alpha) * car_yaw
     # car_yaw = yaw
 
 def car_vel_cb(msg):
-    global car_vel, car_vel_k, is_initialize_4
+    global car_vel_raw, car_vel_k, is_initialize_4
     is_initialize_4 = True
-    car_vel = np.array([msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z])
+    car_vel_raw = np.array([msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z])
     car_vel_k = 0.5*np.array(car_vel) + 0.5*car_vel_k
 
 def rcin_cb(msg):
@@ -283,12 +285,16 @@ if __name__=="__main__":
             if cnt % 100 == 0:
                 print("is_initialize all True")
         
+        car_pos_alpha = 0.2
+        car_pos = (1-car_pos_alpha)*car_pos + car_pos_alpha*car_pos_raw
+        car_vel = (1-car_pos_alpha)*car_vel + car_pos_alpha*car_vel_raw
+    
         # if ch14 == 0:
         #     sm.reset()
         #     print("All states have been reset.")
 
         if ch11 == 0:
-            original_offset = np.array(car_pos) - np.array(mav_pos)
+            original_offset = np.array(car_pos_raw) - np.array(mav_pos)
             # dlt_home_yaw = minAngleDiff(car_home_yaw, mav_home_yaw)
             print("GPS calibration.")
 
@@ -323,7 +329,7 @@ if __name__=="__main__":
             # else:
             #     pass
 
-
+        print("car_pos_raw: {}\ncar_vel_raw: {}".format(car_pos_raw, car_vel_raw))
         car_yaw_cor = angleLimiting(car_yaw - dlt_home_yaw)
         # # GPS course
         # if np.linalg.norm([car_vel_k[0], car_vel_k[1]]) > 2:

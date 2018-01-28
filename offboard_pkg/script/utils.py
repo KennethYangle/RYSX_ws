@@ -20,25 +20,25 @@ class Utils(object):
         self.wedt_realsense = params["wedt_realsense"]
         self.Kp = np.array(params["Kp"])
         self.Ki = np.array(params["Ki"])
-        self.integral = np.array([0, 0, 0])
+        self.integral = np.array([0.0, 0.0, 0.0])
         self.Kp_nu_cam = np.array(params["Kp_nu_cam"])
         self.Ki_nu_cam = np.array(params["Ki_nu_cam"])
-        self.integral_cam = np.array([0, 0, 0])
+        self.integral_cam = np.array([0.0, 0.0, 0.0])
         self.P_cam_component = 0
         self.I_cam_component = 0
         self.Kp_yaw_cam = params["Kp_yaw_cam"]
-        self.rpos_est_k = np.array([0, 0, 0])
+        self.rpos_est_k = np.array([0.0, 0.0, 0.0])
         self.cam_offset = np.array(params["cam_offset"]) # cam distance to center on body coordinate in pixel uint, if z > 0, object appears at the bottom of the image
         self.rpos_init = False
         self.track_quality_k = 0
         self.CAM_GPS_COM = params["CAM_GPS_COM"]
-        self.cam_gps_err_body = np.array([0, 0, 0])
+        self.cam_gps_err_body = np.array([0.0, 0.0, 0.0])
         self.cam_gps_err_up = 0
         self.cam_gps_err_kp = np.array(params["cam_gps_err_kp"])
         self.USE_GPS = params["USE_GPS"]
         self.USE_REALSENSE = params["USE_REALSENSE"]
         self.USE_CAMERA = params["USE_CAMERA"]
-        self.ref_vel_cam_body = np.array([0, 0, 0])
+        self.ref_vel_cam_body = np.array([0.0, 0.0, 0.0])
         self.rsense_gps2_err = 0
         self.rsense_gps2_err_kp = 0.5
         self.RSENSE_GPS_COM = params["RSENSE_GPS_COM"]
@@ -150,7 +150,6 @@ class Utils(object):
         dlt_pos = self.rpos_est_k + pos_info["virtual_car_pos"] + np.array([0, 0, self.ref_vel_cam_body[2]])
         print("dlt_pos: {}".format(dlt_pos))
         
-        dlt_pos_body = pos_info["mav_R"].T.dot(dlt_pos)
         # dlt_pos_body_han = np.array([0.0,0.0,0.0])
         # dlt_pos_body_han[0] = self.TD0(dlt_pos_body[0], 20.0, 0.02)
         # dlt_pos_body_han[1] = self.TD1(dlt_pos_body[1], 20.0, 0.02)
@@ -161,23 +160,22 @@ class Utils(object):
         # print("dlt_pos_body: {}".format(dlt_pos_body))
         # print("dlt_pos_body_flt: {}".format(self.dlt_pos_body_flt))
         if np.linalg.norm(pos_info["car_vel"]) > 2:
-            self.integral = self.integral + self.Ki.dot(dlt_pos_body)*dt
+            self.integral = self.integral + self.Ki.dot(dlt_pos)*dt
         # integral saturation
         self.SatIntegral(self.integral, self.I_saturation_limit, -self.I_saturation_limit)
 
         # PID controller
-        P_component = self.Kp.dot(dlt_pos_body)
+        P_component = self.Kp.dot(dlt_pos)
         I_component = self.integral
-        D_component = self.D*np.array(pos_info["mav_R"].T.dot(pos_info["rel_vel"]))
-        F_component = pos_info["mav_R"].T.dot(pos_info["car_vel"])
+        D_component = self.D*np.array(pos_info["rel_vel"])
+        F_component = pos_info["car_vel"]
         D_component[2] = 0
         F_component[2] = 0
-        ref_vel_body = P_component + I_component + D_component + F_component
+        ref_vel = P_component + I_component + D_component + F_component
         print("P_component: {}\nI_component: {}\nD_component: {}\nF_component: {}".format(P_component, I_component, D_component, F_component))
-        ref_vel_enu = pos_info["mav_R"].dot(ref_vel_body)
-        ref_vel_enu[2] = ref_vel_body[2]
+        ref_vel_enu = ref_vel
         if not self.USE_GPS:
-            ref_vel_enu = np.array([0, 0, 0])
+            ref_vel_enu = np.array([0.0, 0.0, 0.0])
         print("ref_vel_enu: {}".format(ref_vel_enu))
         
         # camera controller
@@ -185,7 +183,7 @@ class Utils(object):
             cam_is_ok = False
             self.track_quality_k = 0
         if cam_is_ok:
-            self.integral =np.array([0, 0, 0])
+            self.integral = np.array([0.0, 0.0, 0.0])
             if pos_i[0]>0:
                 self.i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
             i_err_body = pos_info["R_bc"].dot(self.i_err) - self.cam_offset
@@ -201,7 +199,7 @@ class Utils(object):
                 print("cam_gps_err_up: {}".format(self.cam_gps_err_up))
             # PI
             self.integral_cam = self.integral_cam + self.Ki_nu_cam.dot(i_err_body)*dt
-            self.SatIntegral(self.integral_cam, 1, -1)
+            self.SatIntegral(self.integral_cam, 4, -1)
             self.P_cam_component = self.Kp_nu_cam.dot(i_err_body)
             self.I_cam_component = self.integral_cam
             print("P_cam_component: {}\nI_cam_component: {}".format(self.P_cam_component, self.I_cam_component))
@@ -225,7 +223,7 @@ class Utils(object):
             print("ref_vel_body_cam: {}".format(ref_vel_body))
             ref_vel_enu = pos_info["mav_R"].dot(ref_vel_body)
         else:
-            self.integral_cam = np.array([0, 0, 0])
+            self.integral_cam = np.array([0.0, 0.0, 0.0])
             self.ref_vel_cam_body[1] = 0
             self.ref_vel_cam_body[2] *= 0.98
             ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * pos_info["mav_R"].dot(self.ref_vel_cam_body)
