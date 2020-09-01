@@ -71,17 +71,17 @@ def car_pose_cb(msg):
     car_pos = [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]
     q0, q1, q2, q3 = msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z
     yaw = math.atan2(2*(q0*q3+q1*q2), 1-2*(q2*q2+q3*q3))
-    # if q.qsize < maxQ:
-    #     sumQ += yaw
-    #     q.put(yaw)
-    #     car_yaw = sumQ / q.qsize()
-    # else:
-    #     sumQ += yaw
-    #     q.put(yaw)
-    #     first_yaw = q.get()
-    #     sumQ -= first_yaw
-    #     car_yaw = sumQ / maxQ
-    car_yaw = yaw
+    if q.qsize() < maxQ:
+        sumQ += yaw
+        q.put(yaw)
+        car_yaw = sumQ / q.qsize()
+    else:
+        sumQ += yaw
+        q.put(yaw)
+        first_yaw = q.get()
+        sumQ -= first_yaw
+        car_yaw = sumQ / maxQ
+    # car_yaw = yaw
 
 def car_vel_cb(msg):
     global car_vel, is_initialize_4
