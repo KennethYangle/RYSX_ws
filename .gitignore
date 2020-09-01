@@ -1,0 +1,9 @@
+.vscode/
+.catkin_tools/
+build/
+devel/
+*.zip
+*log*
+data.mat
+*.pyc
+*.bag

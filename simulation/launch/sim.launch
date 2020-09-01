@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find tracker_pkg)/launch/tracker.launch" />
+    <node name="fake_pub" pkg="simulation" type="fake_pub.py" />
+    <node name="main_node" pkg="offboard_pkg" type="main.py" output="screen" />
+</launch>

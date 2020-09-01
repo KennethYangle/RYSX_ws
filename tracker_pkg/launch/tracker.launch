@@ -1,0 +1,4 @@
+<launch>
+    <node name="listener_node" pkg="tracker_pkg" type="listener_node" />
+    <node name="commander_node" pkg="tracker_pkg" type="commander_node" output="screen" />
+</launch>
