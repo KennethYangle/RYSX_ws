@@ -31,17 +31,18 @@ car_home_pos = [0, 0, 0]
 car_home_yaw = 0
 car_home_geo = [0, 0, 0]
 pos_i = [-1, -1, -1]
-car_velocity = 10
+car_velocity = 2
 state_name = "InitializeState"
 command = TwistStamped()
 q = Queue()
 maxQ = 100
 sumQ = 0.0
 # follow_mode: 0, ll=follow_distance; 1, ll=norm(car_home, mav_home)
-follow_mode = 1
+follow_mode = 0
 follow_distance = 2
 u = Utils()
 home_dx, home_dy = 0, 0
+FLIGHT_H = 3
 
 def spin():
     rospy.spin()
@@ -261,7 +262,7 @@ if __name__=="__main__":
         car_local = np.array(car_pos) - np.array(car_home_pos)
         virtual_car_pos = np.array([-ll*np.cos(car_yaw_cor), -ll*np.sin(car_yaw_cor), 0])
         dlt_pos_raw = -mav_local + dif_car_mav_pos + car_local + virtual_car_pos
-        dlt_pos = np.array([dlt_pos_raw[0], dlt_pos_raw[1], car_pos[2]-mav_pos[2]-(car_home_pos[2]-mav_home_pos[2])])
+        dlt_pos = np.array([dlt_pos_raw[0], dlt_pos_raw[1], FLIGHT_H-(mav_pos[2]-mav_home_pos[2])])
         print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_pos: {}".format(dlt_home_yaw, car_yaw_cor, mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_pos))
 
         dlt_vel = np.array(car_vel) - np.array(mav_vel)

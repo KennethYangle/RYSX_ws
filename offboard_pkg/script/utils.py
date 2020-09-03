@@ -10,6 +10,7 @@ class Utils(object):
         self.HEIGHT = 480
         self.Ea = 6378137
         self.Eb = 6356725
+        self.FLIGHT_H = 3
         self.saftyz = 0.3
 
     def sat(self, a, maxv):
@@ -33,7 +34,7 @@ class Utils(object):
             self.P = 0.5
         else:
             self.P = 0.1
-        cmd_vel = self.sat(self.P*(np.array(pos_info["rel_pos"])-np.array([0,0,-2])) + self.D*np.array(pos_info["rel_vel"]), 3*car_velocity)
+        cmd_vel = self.sat(self.P*np.array(pos_info["rel_pos"]) + self.D*np.array(pos_info["rel_vel"]), 3*car_velocity)
         cmd_yawrate = self.sat(self.P*pos_info["rel_yaw"], 2)
         if pos_i[0] > 0:
             v_zi = self.P_i * (pos_i[1] - self.HEIGHT/2)
