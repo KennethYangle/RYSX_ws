@@ -26,6 +26,8 @@ def talker():
 
     car_vel.twist.linear.y = 0
     car_vel.twist.angular.z = 0
+    car_pos.pose.position.x = 1
+    car_pos.pose.position.z = 0.55
     car_pos.pose.orientation.w = np.cos(car_yaw/2)
     car_pos.pose.orientation.x = 0
     car_pos.pose.orientation.y = 0
@@ -44,11 +46,11 @@ def talker():
     cnt = 0
     while not rospy.is_shutdown():
         if cnt < 4000:
-            car_vel.twist.linear.y = 5
+            car_vel.twist.linear.x = 5
         elif cnt < 4200:
-            car_vel.twist.linear.y = 0
+            car_vel.twist.linear.x = 0
         else:
-            car_vel.twist.linear.y = -5
+            car_vel.twist.linear.x = -5
         #计算距离
         car_pos.pose.position.x += car_vel.twist.linear.x * interval_time
         car_pos.pose.position.y += car_vel.twist.linear.y * interval_time
