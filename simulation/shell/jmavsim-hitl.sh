@@ -3,14 +3,14 @@
 # Set FC into HITL mode
 # 0. plug the Pixhawk, turn on the remote control
 # 1. run jmavsim
-cd ~/github/Firmware
+cd ~/Firmware
 # ./Tools/jmavsim_run.sh -q -s -d /dev/ttyUSB0 -b 57600 -r 250 & PID0=$!    # wireless
 ./Tools/jmavsim_run.sh -q -s -d /dev/ttyACM0 -b 57600 -r 250 & PID0=$!     # GPS unlock
 sleep 10s
 
 # 2. start QGroundControl
 cd ~
-./Downloads/QGroundControl.AppImage & PID1=$!
+./QGC/QGroundControl.AppImage & PID1=$!
 sleep 10s
 
 # 3. mavros

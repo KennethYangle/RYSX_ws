@@ -5,15 +5,10 @@ import numpy as np
 import rospy
 #导入自定义的数据类型
 from geometry_msgs.msg import PoseStamped, TwistStamped, Vector3Stamped
-from mavros_msgs.msg import HomePosition
-
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
-import cv2
 from gazebo_msgs.srv import *
 from gazebo_msgs.msg import ModelState
 
-sphere_pos_x,sphere_pos_y,sphere_pos_z = 0,0,0
+sphere_pos_x,sphere_pos_y,sphere_pos_z = 1,0,0.55
 sphere_orientation_w,sphere_orientation_x,sphere_orientation_y,sphere_orientation_z = 0,0,0,0
 def sphere_cb(msg):
     global sphere_pos_x,sphere_pos_y,sphere_pos_z,sphere_orientation_w,sphere_orientation_x,sphere_orientation_y,sphere_orientation_z

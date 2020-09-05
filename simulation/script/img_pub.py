@@ -5,15 +5,10 @@ import numpy as np
 import rospy
 #导入自定义的数据类型
 from geometry_msgs.msg import PoseStamped, TwistStamped, Vector3Stamped
-from mavros_msgs.msg import HomePosition
-
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from gazebo_msgs.srv import *
-import threading
-from utils import Utils
-from Queue import Queue
 
 img_x = 0
 img_y = 0
@@ -60,7 +55,7 @@ def image_callback(data):
             img_pos.vector.z = img_size
 
             imag_pub.publish(img_pos)
-            cv2.imshow("frame", cv_img)
+            # cv2.imshow("frame", cv_img)
             cv2.waitKey(3)
         else:
             img_pos.vector.x = img_x
@@ -74,7 +69,7 @@ def image_callback(data):
 
 if __name__ == '__main__':
     global imag_pub
-    imag_pub = rospy.Publisher("tracker/img_pos", Vector3Stamped, queue_size=10)  # 发送图像位置
+    imag_pub = rospy.Publisher("tracker/pos_image", Vector3Stamped, queue_size=10)  # 发送图像位置
     rospy.init_node('iris_fpv_cam', anonymous=True)
 
     # img_pos = Vector3Stamped()

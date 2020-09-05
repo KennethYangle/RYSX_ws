@@ -5,15 +5,7 @@ import numpy as np
 import rospy
 #导入自定义的数据类型
 from geometry_msgs.msg import PoseStamped, TwistStamped, Vector3Stamped
-from mavros_msgs.msg import HomePosition
-
-from sensor_msgs.msg import Image
-from cv_bridge import CvBridge, CvBridgeError
-import cv2
 from gazebo_msgs.srv import *
-import threading
-from utils import Utils
-from Queue import Queue
 
 img_recongition = False
 
@@ -34,7 +26,7 @@ def listener_pose():
     sphere_depth = PoseStamped()
     rospy.init_node('iris_fpv_cam', anonymous=True)
 
-    rospy.Subscriber('tracker/img_pos', Vector3Stamped, depth_cb)
+    rospy.Subscriber('tracker/pos_image', Vector3Stamped, depth_cb)
 
 
 
@@ -51,8 +43,7 @@ def listener_pose():
         model_mav = GetModelStateRequest()
         model_mav.model_name = 'iris_fpv_cam'
         objstate_model_mav = get_state_service(model_mav)
-        state_mav = (
-        objstate_model_mav.pose.position.x, objstate_model_mav.pose.position.y, objstate_model_mav.pose.position.z)
+        state_mav = (objstate_model_mav.pose.position.x, objstate_model_mav.pose.position.y, objstate_model_mav.pose.position.z)
         # print(state_mav)
         dx = (state_sphere[0] - state_mav[0]) ** 2
         dy = (state_sphere[1] - state_mav[1]) ** 2

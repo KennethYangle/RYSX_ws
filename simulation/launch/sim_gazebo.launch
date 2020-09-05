@@ -1,7 +1,8 @@
 <launch>
+    <include file="$(find tracker_pkg)/launch/tracker.launch" />
     <node name="fake_pub" pkg="simulation" type="fake_pub.py" />
-    <node name="img_pub" pkg="simulation" type="img_pub.py" />
-    <node name="depth_pub" pkg="simulation" type="depth_pub.py" />
+<!--     <node name="img_pub" pkg="simulation" type="img_pub.py" /> -->
+<!--     <node name="depth_pub" pkg="simulation" type="depth_pub.py" /> -->
     <node name="sphere_control" pkg="simulation" type="sphere_control.py" />
     <node name="main_node" pkg="offboard_pkg" type="main.py" output="screen" />
 </launch>

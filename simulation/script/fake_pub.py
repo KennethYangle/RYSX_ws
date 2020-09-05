@@ -7,6 +7,8 @@ import rospy
 from geometry_msgs.msg import PoseStamped, TwistStamped, Vector3Stamped
 from mavros_msgs.msg import HomePosition
 
+# JMAVSIM or GAZEBO
+SIM_MODE = "JMAVSIM"
 
 def talker():
     car_pos_pub = rospy.Publisher("mavros_ruying/local_position/pose", PoseStamped, queue_size=10)
@@ -39,31 +41,34 @@ def talker():
     car_home = HomePosition()
     car_home.geo.latitude = 47.3977721
     car_home.geo.longitude = 8.5455939
-    car_home.geo.altitude = 535.220915797
+    car_home.geo.altitude = 535.14291649
     car_home.position = car_pos.pose.position
     car_home.orientation = car_pos.pose.orientation
 
     cnt = 0
     while not rospy.is_shutdown():
-        if cnt < 4000:
-            car_vel.twist.linear.x = 5
+        if cnt < 500:
+            car_vel.twist.linear.x = 0
+        elif cnt < 4000:
+            car_vel.twist.linear.x = 1
         elif cnt < 4200:
             car_vel.twist.linear.x = 0
         else:
-            car_vel.twist.linear.x = -5
+            car_vel.twist.linear.x = -1
         #计算距离
         car_pos.pose.position.x += car_vel.twist.linear.x * interval_time
         car_pos.pose.position.y += car_vel.twist.linear.y * interval_time
         car_pos.pose.position.z += car_vel.twist.linear.z * interval_time
-        # car_yaw += car_vel.twist.angular.z * interval_time
-        car_yaw = 0.2*np.random.rand(1)[0]-0.1
+        car_yaw += car_vel.twist.angular.z * interval_time
+        # car_yaw = 0.2*np.random.rand(1)[0]-0.1
         car_pos.pose.orientation.w = np.cos(car_yaw/2)
         car_pos.pose.orientation.x = 0
         car_pos.pose.orientation.y = 0
         car_pos.pose.orientation.z = np.sin(car_yaw/2)
         car_pos_pub.publish(car_pos)
         car_vel_pub.publish(car_vel)
-        pos_image_pub.publish(pos_image)
+        if SIM_MODE == "JMAVSIM":
+            pos_image_pub.publish(pos_image)
         if cnt % 100 == 0:
             car_home_pub.publish(car_home)
         cnt += 1

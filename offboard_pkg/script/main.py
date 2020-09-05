@@ -229,11 +229,11 @@ if __name__=="__main__":
                 print("Enter MANUAL mode")
             rate.sleep()
             continue
-        delta_time = rospy.Time.now() - last_request
-        if delta_time < rospy.Duration(5):
-            local_vel_pub.publish(command)
-            rate.sleep()
-            continue
+        # delta_time = rospy.Time.now() - last_request
+        # if delta_time < rospy.Duration(5):
+        #     local_vel_pub.publish(command)
+        #     rate.sleep()
+        #     continue
         else:
             if current_state.mode != "OFFBOARD":
                 resp1 = set_mode_client( 0,offb_set_mode.custom_mode )

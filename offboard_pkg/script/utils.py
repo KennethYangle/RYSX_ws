@@ -39,7 +39,8 @@ class Utils(object):
         if pos_i[0] > 0:
             v_zi = self.P_i * (pos_i[1] - self.HEIGHT/2)
             print("pos_i: {}".format(pos_i))
-            return [cmd_vel[0], cmd_vel[1], v_zi, cmd_yawrate]
+            # return [cmd_vel[0], cmd_vel[1], v_zi, cmd_yawrate]
+            return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
         else:
             return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
         # if pos_i[0] > 0:
