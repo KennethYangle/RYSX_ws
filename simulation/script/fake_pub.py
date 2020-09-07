@@ -8,7 +8,7 @@ from geometry_msgs.msg import PoseStamped, TwistStamped, Vector3Stamped
 from mavros_msgs.msg import HomePosition
 
 # JMAVSIM or GAZEBO
-SIM_MODE = "JMAVSIM"
+SIM_MODE = "GAZEBO"
 
 def talker():
     car_pos_pub = rospy.Publisher("mavros_ruying/local_position/pose", PoseStamped, queue_size=10)
@@ -28,8 +28,8 @@ def talker():
 
     car_vel.twist.linear.y = 0
     car_vel.twist.angular.z = 0
-    car_pos.pose.position.x = 1
-    car_pos.pose.position.z = 0.55
+    car_pos.pose.position.x = 1.2
+    car_pos.pose.position.z = 2
     car_pos.pose.orientation.w = np.cos(car_yaw/2)
     car_pos.pose.orientation.x = 0
     car_pos.pose.orientation.y = 0
@@ -39,7 +39,7 @@ def talker():
     pos_image.vector.z = 0
 
     car_home = HomePosition()
-    car_home.geo.latitude = 47.3977721
+    car_home.geo.latitude = 47.3977429
     car_home.geo.longitude = 8.5455939
     car_home.geo.altitude = 535.14291649
     car_home.position = car_pos.pose.position

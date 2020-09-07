@@ -43,6 +43,7 @@ follow_distance = 2
 u = Utils()
 home_dx, home_dy = 0, 0
 FLIGHT_H = 3
+depth = -1
 
 def spin():
     rospy.spin()
@@ -125,6 +126,10 @@ def car_home_cb(msg):
         car_home_yaw = math.atan2(2*(q0*q3+q1*q2), 1-2*(q2*q2+q3*q3))
         car_home_geo = [msg.geo.latitude, msg.geo.longitude, msg.geo.altitude]
 
+def depth_cb(msg):
+    global depth
+    depth = msg.pose.position.x
+
 def minAngleDiff(a, b):
     diff = a - b
     if diff < 0:
@@ -156,6 +161,7 @@ if __name__=="__main__":
     rospy.Subscriber("tracker/pos_image", Vector3Stamped, pos_image_cb)
     rospy.Subscriber("mavros/home_position/home", HomePosition, mav_home_cb)
     rospy.Subscriber("mavros_ruying/home_position/home", HomePosition, car_home_cb)
+    rospy.Subscriber("tracker/depth", PoseStamped, depth_cb)
     local_pos_pub = rospy.Publisher('mavros/setpoint_position/local', PoseStamped, queue_size=10)
     local_vel_pub = rospy.Publisher('mavros/setpoint_velocity/cmd_vel', TwistStamped, queue_size=10)
     print("Publisher and Subscriber Created")
@@ -263,15 +269,22 @@ if __name__=="__main__":
         virtual_car_pos = np.array([-ll*np.cos(car_yaw_cor), -ll*np.sin(car_yaw_cor), 0])
         dlt_pos_raw = -mav_local + dif_car_mav_pos + car_local + virtual_car_pos
         dlt_pos = np.array([dlt_pos_raw[0], dlt_pos_raw[1], FLIGHT_H-(mav_pos[2]-mav_home_pos[2])])
+        dlt_mav_car_gps_enu = -mav_local + dif_car_mav_pos + car_local
+        dlt_mav_car_gps_enu[2] = dlt_pos[2]
         print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_pos: {}".format(dlt_home_yaw, car_yaw_cor, mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_pos))
 
         dlt_vel = np.array(car_vel) - np.array(mav_vel)
         dlt_yaw = minAngleDiff(car_yaw_cor, mav_yaw)
         keys = [ch5, ch6, ch7, ch8]
-        pos_info = {"mav_pos": mav_pos, "mav_vel": mav_vel, "mav_yaw": mav_yaw, "mav_R": mav_R, "mav_home_pos": mav_home_pos, "mav_home_yaw": mav_home_yaw, "car_home_pos": car_home_pos, "rel_pos": dlt_pos, "rel_vel": dlt_vel, "rel_yaw": dlt_yaw}
+        pos_info = {"mav_pos": mav_pos, "mav_vel": mav_vel, "mav_yaw": mav_yaw, "mav_R": mav_R, "mav_home_pos": mav_home_pos, 
+                    "mav_home_yaw": mav_home_yaw, "car_home_pos": car_home_pos, "rel_pos": dlt_pos, "rel_vel": dlt_vel, 
+                    "rel_yaw": dlt_yaw, "dlt_mav_car_gps_enu": dlt_mav_car_gps_enu, "virtual_car_pos": virtual_car_pos, 
+                    "R_bc": np.array([[1,0,0], [0,0,1], [0,-1,0]])}
         print("car_yaw_cor: {}, mav_yaw: {}".format(car_yaw_cor, mav_yaw))
+        if pos_i[0] > 0:
+            print("pos_i: {}".format(pos_i))
 
-        cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, car_velocity)
+        cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity)
         print("cmd: {}\n".format(cmd))
         if cmd is not None:
             if cmd == "failed":

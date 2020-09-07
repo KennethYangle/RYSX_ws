@@ -1,6 +1,6 @@
 #! /bin/bash
 # 2. start QGroundControl
-cd ~/QGC
+cd ~/Downloads
 ./QGroundControl.AppImage & PID1=$!
 sleep 10s
 
