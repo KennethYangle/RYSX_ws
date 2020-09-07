@@ -45,6 +45,6 @@ if __name__ == '__main__':
 
     global bridge
     bridge = CvBridge()
-    rospy.Subscriber('/iris_fpv_cam/usb_cam/image_raw', Image, image_callback)
+    rospy.Subscriber('/iris/usb_cam/image_raw', Image, image_callback)
 
     rospy.spin()
