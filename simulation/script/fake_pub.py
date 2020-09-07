@@ -53,6 +53,7 @@ def talker():
             car_vel.twist.linear.x = 1
         elif cnt < 4200:
             car_vel.twist.linear.x = 0
+            car_yaw = -2*np.pi/3
         else:
             car_vel.twist.linear.x = -1
         #计算距离

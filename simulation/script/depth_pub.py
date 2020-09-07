@@ -81,7 +81,8 @@ def listener_pose():
         dz = (sphere_z - mav_z) ** 2
         dis_uavtosphere = (dx + dy + dz) ** 0.5
 
-        if dis_uavtosphere < 5 and img_recongition == True:
+        print("dis_uavtosphere: {}, img_recongition: {}".format(dis_uavtosphere, img_recongition))
+        if dis_uavtosphere < 20 and img_recongition == True:
             #sphere_depth.pose.position.w = dis_uavtosphere
             sphere_depth.pose.position.x = dis_uavtosphere
             sphere_depth.pose.position.y = dis_uavtosphere
@@ -93,7 +94,7 @@ def listener_pose():
             sphere_depth.pose.position.z = -1
 
         sphere_depth_pub.publish(sphere_depth)
-        print("dis_uavtosphere: {}".format(sphere_depth))
+        print("sphere_depth: {}".format(sphere_depth))
         rate.sleep()
 
 # while not rospy.is_shutdown():

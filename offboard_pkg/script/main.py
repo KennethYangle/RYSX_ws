@@ -283,8 +283,10 @@ if __name__=="__main__":
         print("car_yaw_cor: {}, mav_yaw: {}".format(car_yaw_cor, mav_yaw))
         if pos_i[0] > 0:
             print("pos_i: {}".format(pos_i))
+            print("depth: {}".format(depth))
 
         cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity)
+        # cmd = sm.update(keys, is_initialize_finish, pos_info, [0,0,0], depth, car_velocity)
         print("cmd: {}\n".format(cmd))
         if cmd is not None:
             if cmd == "failed":

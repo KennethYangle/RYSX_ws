@@ -17,10 +17,10 @@ class Utils(object):
         self.we_gps = np.array([[0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]])
         self.we_realsense = 1.0
         self.wedt_realsense = 0.1
-        self.Kp = np.array([[1.0, 0, 0], [0, 1.0, 0], [0, 0, 1.0]])
-        self.Kp_nu_cam = np.array([[1.0, 0, 0], [0, 1.0, 0], [0, 0, 1.0]])
+        self.Kp = np.array([[0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]])
+        self.Kp_nu_cam = np.array([[0.001, 0, 0], [0, 0.001, 0], [0, 0, 0.001]])
         self.cam_offset = np.array([0, 0, 0])
-        self.Kp_yaw_cam = 1.0
+        self.Kp_yaw_cam = 0.001
         self.rpos_est_k = np.array([0, 0, 0])
         self.cam_offset = np.array([0, 0, 0]) #cam distance to center
         self.rpos_init = False
@@ -38,6 +38,9 @@ class Utils(object):
         return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
 
     def DockingControllerFusion(self, pos_info, pos_i, depth, car_velocity):
+        if pos_info["mav_pos"] == 0:
+            return [0,0,0,0]
+
         rpos_est = pos_info["dlt_mav_car_gps_enu"]
         if not self.rpos_init:
             rpos_est_k = rpos_est
@@ -47,8 +50,9 @@ class Utils(object):
         realsense_is_ok = False
         dt = 0.05 # time interval
         track_quality = pos_i[2] #pos_i[2] is quality, range from 0 to 1
-        if np.linalg.norm([rpos_est[0], rpos_est[1]]) < 4 and track_quality > 0.6:
+        if np.linalg.norm([rpos_est[0], rpos_est[1]]) < 5 and track_quality > 0.6:
             cam_is_ok = True
+        if depth > 0:
             realsense_is_ok = True
         if self.GPS_SLIDING:
             rpos_est = rpos_est_k + we_gps.dot(pos_info["dlt_mav_car_gps_enu"] - rpos_est_k)
@@ -63,14 +67,14 @@ class Utils(object):
         
         ref_vel_enu = self.Kp.dot(rpos_est + pos_info["virtual_car_pos"]) + self.D*np.array(pos_info["rel_vel"])
         
-        i_err = np.array([self.WIDTH - pos_i[0], self.HEIGHT - pos_i[1], 0])
-        ref_vel_cam_cam = self.Kp_nu_cam.dot(i_err)
-        ref_vel_cam_enu = pos_info["mav_R"].dot(pos_info["R_bc"].dot(ref_vel_cam_cam) + self.cam_offset)
-        if not self.USE_CAM_FOR_X:
-            ref_vel_cam_enu[0] = 0
-        ref_vel_cam_enu[1] = 0
-        ref_vel_enu = ref_vel_enu + ref_vel_cam_enu
-
+        if cam_is_ok:
+            i_err = np.array([self.WIDTH/2 - pos_i[0], self.HEIGHT/2 - pos_i[1], 0])
+            ref_vel_cam_cam = self.Kp_nu_cam.dot(i_err)
+            ref_vel_cam_enu = pos_info["mav_R"].dot(pos_info["R_bc"].dot(ref_vel_cam_cam) + self.cam_offset)
+            if not self.USE_CAM_FOR_X:
+                ref_vel_cam_enu[0] = 0
+            ref_vel_cam_enu[1] = 0
+            ref_vel_enu = (1 - track_quality) * ref_vel_enu + track_quality * ref_vel_cam_enu
 
         cmd_yawrate = self.sat(self.P*pos_info["rel_yaw"], 2)
         if cam_is_ok:
