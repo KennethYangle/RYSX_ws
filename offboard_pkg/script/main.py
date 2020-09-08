@@ -4,7 +4,9 @@
 import rospy
 import numpy as np
 import math
+import time
 import threading
+import Tkinter
 from geometry_msgs.msg import *
 from std_srvs.srv import Empty
 from mavros_msgs.srv import CommandBool
@@ -14,8 +16,10 @@ from flow import StateMachine
 from utils import Utils
 from Queue import Queue
 
+# Simulation of RealFlight
+MODE = "Simulation"
 current_state = State()
-ch5, ch6, ch7, ch8, ch9 = -1, -1, -1, -1, -1
+ch5, ch6, ch7, ch8, ch9 = 0, 0, 0, 0, 1
 is_initialize_1, is_initialize_2, is_initialize_3, is_initialize_4, is_initialize_5, is_initialize_6, is_initialize_7, is_initialize_8 = False, False, False, False, False, False, False, False
 mav_pos = [0, 0, 0]
 mav_vel = [0, 0, 0]
@@ -103,6 +107,31 @@ def rcin_cb(msg):
     if ch5!=last_ch5 or ch6!=last_ch6 or ch7!=last_ch7 or ch8!=last_ch8 or ch9!=last_ch9:
         print("ch5: {}, ch6: {}, ch7: {}, ch8: {}, ch9: {}".format(ch5, ch6, ch7, ch8, ch9))
 
+def call(event):
+    global ch5, ch6, ch7, ch8, ch9
+    k = event.keysym
+    if k == "m":
+        ch6 = 1
+    elif k == "h":
+        ch7 = 1
+    elif k == "o":
+        ch8 = 1
+    elif k == "p":
+        ch8 = 0
+    elif k == "c":
+        ch9 = (ch9 + 1) % 2
+    time.sleep(0.02)
+
+def read_kbd_input():
+    global is_initialize_5
+    is_initialize_5 = True
+    win = Tkinter.Tk()
+    frame = Tkinter.Frame(win,width=100,height=60)
+    frame.bind("<Key>",call)
+    frame.focus_set()
+    frame.pack()
+    win.mainloop()
+
 def pos_image_cb(msg):
     global is_initialize_6, pos_i
     is_initialize_6 = True
@@ -157,7 +186,13 @@ if __name__=="__main__":
     rospy.Subscriber("mavros/local_position/velocity_local", TwistStamped, mav_vel_cb)
     rospy.Subscriber("mavros_ruying/local_position/pose", PoseStamped, car_pose_cb)
     rospy.Subscriber("mavros_ruying/local_position/velocity_local", TwistStamped, car_vel_cb)
-    rospy.Subscriber("mavros/rc/in", RCIn, rcin_cb)
+    if MODE == "RealFlight":
+        rospy.Subscriber("mavros/rc/in", RCIn, rcin_cb)
+    elif MODE == "Simulation":
+        inputThread = threading.Thread(target=read_kbd_input)
+        inputThread.start()
+    else:
+        raise Exception("Invalid MODE!", MODE)
     rospy.Subscriber("tracker/pos_image", Vector3Stamped, pos_image_cb)
     rospy.Subscriber("mavros/home_position/home", HomePosition, mav_home_cb)
     rospy.Subscriber("mavros_ruying/home_position/home", HomePosition, car_home_cb)
