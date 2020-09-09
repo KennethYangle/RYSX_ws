@@ -4,7 +4,8 @@
 import numpy as np
 import rospy
 #导入自定义的数据类型
-from geometry_msgs.msg import PoseStamped, TwistStamped, Vector3Stamped
+from geometry_msgs.msg import PoseStamped, TwistStamped
+from std_msgs.msg import Float32MultiArray
 from mavros_msgs.msg import HomePosition
 
 # JMAVSIM or GAZEBO
@@ -13,7 +14,7 @@ SIM_MODE = "GAZEBO"
 def talker():
     car_pos_pub = rospy.Publisher("mavros_ruying/local_position/pose", PoseStamped, queue_size=10)
     car_vel_pub = rospy.Publisher("mavros_ruying/local_position/velocity_local", TwistStamped, queue_size=10)
-    pos_image_pub = rospy.Publisher("tracker/pos_image", Vector3Stamped, queue_size=10)
+    pos_image_pub = rospy.Publisher("tracker/pos_image", Float32MultiArray, queue_size=10)
     car_home_pub = rospy.Publisher("mavros_ruying/home_position/home", HomePosition, queue_size=10)
     rospy.init_node('pub_node', anonymous=True)
     
@@ -23,7 +24,7 @@ def talker():
     
     car_pos = PoseStamped()
     car_vel = TwistStamped()
-    pos_image = Vector3Stamped()
+    pos_image = Float32MultiArray()
     car_yaw = np.pi/3
 
     car_vel.twist.linear.y = 0
@@ -34,9 +35,7 @@ def talker():
     car_pos.pose.orientation.x = 0
     car_pos.pose.orientation.y = 0
     car_pos.pose.orientation.z = np.sin(car_yaw/2)
-    pos_image.vector.x = 0
-    pos_image.vector.y = 0
-    pos_image.vector.z = 0
+    pos_image.data = [0, 0, 0, 0, 0]
 
     car_home = HomePosition()
     car_home.geo.latitude = 47.3977429

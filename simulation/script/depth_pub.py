@@ -4,7 +4,8 @@
 import numpy as np
 import rospy
 #导入自定义的数据类型
-from geometry_msgs.msg import PoseStamped, TwistStamped, Vector3Stamped
+from geometry_msgs.msg import PoseStamped, TwistStamped
+from std_msgs.msg import Float32MultiArray
 from gazebo_msgs.srv import *
 from gazebo_msgs.msg import ModelStates
 
@@ -17,7 +18,7 @@ def spin():
 
 def depth_cb(msg):
     global img_recongition
-    if msg.vector.z == 0:
+    if msg.data[4] == 0:
         img_recongition = False
     else:
         img_recongition = True
@@ -56,7 +57,7 @@ def listener_pose():
     # sphere_depth = PoseStamped()
     # rospy.init_node('iris_fpv_cam', anonymous=True)
 
-    rospy.Subscriber('tracker/pos_image', Vector3Stamped, depth_cb)
+    rospy.Subscriber('tracker/pos_image', Float32MultiArray, depth_cb)
 
     # sphere_msg = ModelState()
     # sphere_msg.model_name = 'unit_sphere'

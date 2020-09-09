@@ -8,6 +8,7 @@ import time
 import threading
 import Tkinter
 from geometry_msgs.msg import *
+from std_msgs.msg import Float32MultiArray
 from std_srvs.srv import Empty
 from mavros_msgs.srv import CommandBool
 from mavros_msgs.srv import SetMode
@@ -34,7 +35,7 @@ car_yaw = 0
 car_home_pos = [0, 0, 0]
 car_home_yaw = 0
 car_home_geo = [0, 0, 0]
-pos_i = [-1, -1, -1]
+pos_i = [0, 0, 0, 0, 0]
 car_velocity = 2
 state_name = "InitializeState"
 command = TwistStamped()
@@ -135,7 +136,7 @@ def read_kbd_input():
 def pos_image_cb(msg):
     global is_initialize_6, pos_i
     is_initialize_6 = True
-    pos_i = [msg.vector.x, msg.vector.y, msg.vector.z]
+    pos_i = msg.data
 
 def mav_home_cb(msg):
     global is_initialize_7, mav_home_pos, mav_home_yaw, mav_home_geo, state_name
@@ -193,7 +194,7 @@ if __name__=="__main__":
         inputThread.start()
     else:
         raise Exception("Invalid MODE!", MODE)
-    rospy.Subscriber("tracker/pos_image", Vector3Stamped, pos_image_cb)
+    rospy.Subscriber("tracker/pos_image", Float32MultiArray, pos_image_cb)
     rospy.Subscriber("mavros/home_position/home", HomePosition, mav_home_cb)
     rospy.Subscriber("mavros_ruying/home_position/home", HomePosition, car_home_cb)
     rospy.Subscriber("tracker/depth", PoseStamped, depth_cb)
@@ -321,7 +322,7 @@ if __name__=="__main__":
             print("depth: {}".format(depth))
 
         cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity)
-        # cmd = sm.update(keys, is_initialize_finish, pos_info, [0,0,0], depth, car_velocity)
+        # cmd = sm.update(keys, is_initialize_finish, pos_info, [0,0,0,0,0], depth, car_velocity)
         print("cmd: {}".format(cmd))
         if cmd is not None:
             if cmd == "failed":

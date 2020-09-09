@@ -49,7 +49,7 @@ class Utils(object):
         cam_is_ok = False
         realsense_is_ok = False
         dt = 0.05 # time interval
-        track_quality = pos_i[2] #pos_i[2] is quality, range from 0 to 1
+        track_quality = pos_i[4] #pos_i[4] is quality, range from 0 to 1
         if np.linalg.norm([rpos_est[0], rpos_est[1]]) < 5 and track_quality > 0.6:
             cam_is_ok = True
         if depth > 0:

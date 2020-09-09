@@ -86,7 +86,6 @@ class DockingState(object):
     def go_home(self, pos_info):
         self.stateMachine.setState(self.stateMachine.getHomewardState())
     def approach(self, pos_info, pos_i, depth, car_velocity):
-        # cmd = self.stateMachine.util.DockingController(pos_info, pos_i, car_velocity)
         cmd = self.stateMachine.util.DockingControllerFusion(pos_info, pos_i, depth, car_velocity)
         return cmd
     def flightInward(self, pos, geo_fence):
@@ -216,7 +215,7 @@ class StateMachine(object):
         - is_initialize_finish: externally subscribed
         - pos_info: a dict contain absolute position and relative position, 
         {"mav_pos": mav_pos, "mav_vel": mav_vel, "mav_yaw": mav_yaw, "mav_home_pos": mav_home_pos, "car_home_pos": car_home_pos, "rel_pos": dlt_pos, "rel_vel": dlt_vel, "rel_yaw": dlt_yaw}
-        - pos_i: the target coordinates on the image
+        - pos_i: i_x, i_y, bbox_w, bbox_h, confidence
         - car_velocity: use the velocity of car as base value
         """
         self.ch5, self.ch6, self.ch7, self.ch8 = keys

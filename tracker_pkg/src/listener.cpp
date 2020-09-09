@@ -1,27 +1,28 @@
 #include "tracker_node/SocketServer.h"
 #include <ros/ros.h>
-#include <geometry_msgs/Vector3Stamped.h>
+#include <std_msgs/Float32MultiArray.h>
 
 int main(int argc, char** argv)
 {
     ros::init(argc, argv, "listener_node");
     ros::NodeHandle nh;
-    geometry_msgs::Vector3Stamped msg;
-    ros::Publisher pub = nh.advertise<geometry_msgs::Vector3Stamped>("tracker/pos_image", 1);
+    ros::Publisher pub = nh.advertise<std_msgs::Float32MultiArray>("tracker/pos_image", 1);
     // ros::Rate loop_rate(100.0);
 
     SocketServer SS("127.0.0.1",6667);
 
     while(ros::ok)
     {
+        std_msgs::Float32MultiArray msg;
         SS.receive_msg();
 
         DataPack DP;
         memcpy(DP.pack_field, SS.buff, 40*sizeof(unsigned char));
-        msg.header.stamp = ros::Time::now();
-        msg.vector.x = DP.data_field[0];
-        msg.vector.y = DP.data_field[1];
-        msg.vector.z = DP.data_field[2] * DP.data_field[3];
+        msg.data.push_back(DP.data_field[0]);   // x
+        msg.data.push_back(DP.data_field[1]);   // y
+        msg.data.push_back(DP.data_field[2]);   // bbox_w
+        msg.data.push_back(DP.data_field[3]);   // bbox_h
+        msg.data.push_back(DP.data_field[4]);   // confidence
         pub.publish(msg);
         // cout << msg << endl;
 
@@ -32,4 +33,3 @@ int main(int argc, char** argv)
     SS.release();
     return 0;
 }
-
