@@ -42,8 +42,13 @@ def talker():
     car_home.geo.latitude = 47.3977429
     car_home.geo.longitude = 8.5455939
     car_home.geo.altitude = 535.14291649
-    car_home.position = car_pos.pose.position
-    car_home.orientation = car_pos.pose.orientation
+    # car_home.position.x = car_pos.pose.position.x
+    # car_home.position.y = car_pos.pose.position.y
+    # car_home.position.z = car_pos.pose.position.z
+    car_home.orientation.w = car_pos.pose.orientation.w
+    car_home.orientation.x = car_pos.pose.orientation.x
+    car_home.orientation.y = car_pos.pose.orientation.y
+    car_home.orientation.z = car_pos.pose.orientation.z
 
     cnt = 0
     while not rospy.is_shutdown():
