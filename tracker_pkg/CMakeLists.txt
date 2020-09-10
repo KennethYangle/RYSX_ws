@@ -10,9 +10,12 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
+  pcl_conversions
+  pcl_ros
   roscpp
   rospy
   std_msgs
+  sensor_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -138,6 +141,7 @@ include_directories(
 # add_executable(${PROJECT_NAME}_node src/tracker_pkg_node.cpp)
 add_executable(listener_node src/listener.cpp)
 add_executable(commander_node src/commander.cpp)
+add_executable(point_node src/point.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -155,6 +159,7 @@ add_executable(commander_node src/commander.cpp)
 # )
 target_link_libraries(listener_node ${catkin_LIBRARIES})
 target_link_libraries(commander_node ${catkin_LIBRARIES})
+target_link_libraries(point_node ${catkin_LIBRARIES})
 
 #############
 ## Install ##
