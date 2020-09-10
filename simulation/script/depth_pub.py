@@ -81,6 +81,7 @@ def listener_pose():
         dy = (sphere_y - mav_y) ** 2
         dz = (sphere_z - mav_z) ** 2
         dis_uavtosphere = (dx + dy + dz) ** 0.5
+        print("sphere pose: {}\nmav pose: {}".format([sphere_x, sphere_y, sphere_z], [mav_x, mav_y, mav_z]))
 
         print("dis_uavtosphere: {}, img_recongition: {}".format(dis_uavtosphere, img_recongition))
         if dis_uavtosphere < 20 and img_recongition == True:

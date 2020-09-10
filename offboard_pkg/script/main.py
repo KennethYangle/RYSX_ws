@@ -321,8 +321,8 @@ if __name__=="__main__":
             print("pos_i: {}".format(pos_i))
             print("depth: {}".format(depth))
 
-        cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity)
-        # cmd = sm.update(keys, is_initialize_finish, pos_info, [0,0,0,0,0], depth, car_velocity)
+        # cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity)
+        cmd = sm.update(keys, is_initialize_finish, pos_info, [0,0,0,0,0], depth, car_velocity)
         print("cmd: {}".format(cmd))
         if cmd is not None:
             if cmd == "failed":
@@ -341,6 +341,7 @@ if __name__=="__main__":
             command.twist.linear.z = 0
             command.twist.angular.z = 0
         local_vel_pub.publish(command)
-        print(command.twist, "\n")
+        print(command.twist)
+        print 
         rate.sleep()
     rospy.spin()

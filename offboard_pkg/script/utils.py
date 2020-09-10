@@ -55,7 +55,7 @@ class Utils(object):
         if depth > 0:
             realsense_is_ok = True
         if self.GPS_SLIDING:
-            rpos_est = rpos_est_k + we_gps.dot(pos_info["dlt_mav_car_gps_enu"] - rpos_est_k)
+            rpos_est = rpos_est_k + self.we_gps.dot(pos_info["dlt_mav_car_gps_enu"] - rpos_est_k)
         else:
             rpos_est = pos_info["dlt_mav_car_gps_enu"]
 
