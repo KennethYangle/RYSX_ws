@@ -12,12 +12,12 @@ class Utils(object):
         self.Eb = 6356725
         self.FLIGHT_H = 3
         self.saftyz = 0.3
-        self.USE_CAM_FOR_X = False
+        self.USE_CAM_FOR_X = True
         self.GPS_SLIDING = False
         self.we_gps = np.array([[0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]])
         self.we_realsense = 1.0
         self.wedt_realsense = 0.1
-        self.Kp = np.array([[2.0, 0, 0], [0, 2.0, 0], [0, 0, 0.5]])
+        self.Kp = np.array([[1.0, 0, 0], [0, 1.0, 0], [0, 0, 0.5]])
         self.Ki = np.array([[0.1, 0, 0], [0, 0.1, 0], [0, 0, 0.1]])
         self.integral = np.array([0, 0, 0])
         self.Kp_nu_cam = np.array([[0.005, 0, 0], [0, 0.005, 0], [0, 0, 0.005]])
@@ -52,7 +52,7 @@ class Utils(object):
         realsense_is_ok = False
         dt = 0.05 # time interval
         track_quality = pos_i[4] #pos_i[4] is quality, range from 0 to 1
-        if np.linalg.norm([rpos_est[0], rpos_est[1]]) < 5 and track_quality > 0.6:
+        if np.linalg.norm([rpos_est[0], rpos_est[1]]) < 10 and track_quality > 0.6:
             cam_is_ok = True
         if depth > 0:
             realsense_is_ok = True
@@ -60,7 +60,9 @@ class Utils(object):
             rpos_est = rpos_est_k + self.we_gps.dot(pos_info["dlt_mav_car_gps_enu"] - rpos_est_k)
         else:
             rpos_est = pos_info["dlt_mav_car_gps_enu"]
-
+        
+        cam_is_ok = True
+        realsense_is_ok = True
         if realsense_is_ok:
             # body: right-front-up
             rpos_est_body = pos_info["mav_R"].T.dot(rpos_est)
@@ -75,15 +77,17 @@ class Utils(object):
         # integral reset???
         self.SatIntegral(self.integral)
 
-        ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
+        #ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
+        ref_vel_enu = np.array([0, 0, 0])
         print("ref_vel_enu: {}".format(ref_vel_enu))
         if cam_is_ok:
             i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
-            ref_vel_cam_cam = self.Kp_nu_cam.dot(i_err)
-            ref_vel_cam_enu = pos_info["mav_R"].dot(pos_info["R_bc"].dot(ref_vel_cam_cam) + self.cam_offset)
+            ref_vel_cam_body = pos_info["R_bc"].dot(self.Kp_nu_cam.dot(i_err))
             if not self.USE_CAM_FOR_X:
-                ref_vel_cam_enu[0] = 0
-            ref_vel_cam_enu[1] = 0
+                ref_vel_cam_body[0] = 0
+            ref_vel_cam_body[1] = 0
+            print("ref_vel_cam_body: {}".format(ref_vel_cam_body))
+            ref_vel_cam_enu = pos_info["mav_R"].dot(ref_vel_cam_body + self.cam_offset)
             print("ref_vel_cam_enu: {}".format(ref_vel_cam_enu))
             ref_vel_enu = (1 - track_quality/3) * ref_vel_enu + track_quality/3 * ref_vel_cam_enu
 
