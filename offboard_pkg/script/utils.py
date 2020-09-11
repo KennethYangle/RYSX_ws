@@ -20,9 +20,11 @@ class Utils(object):
         self.Kp = np.array([[1.0, 0, 0], [0, 1.0, 0], [0, 0, 0.5]])
         self.Ki = np.array([[0.1, 0, 0], [0, 0.1, 0], [0, 0, 0.1]])
         self.integral = np.array([0, 0, 0])
-        self.Kp_nu_cam = np.array([[0.005, 0, 0], [0, 0.005, 0], [0, 0, 0.005]])
+        self.Kp_nu_cam = np.array([[0.01, 0, 0], [0, 0.01, 0], [0, 0, 0.02]])
+        self.Ki_nu_cam = np.array([[0.001, 0, 0], [0, 0.001, 0], [0, 0, 0.002]])
+        self.integral_cam = np.array([0, 0, 0])
         self.cam_offset = np.array([0, 0, 0])
-        self.Kp_yaw_cam = 0.00001
+        self.Kp_yaw_cam = 0.0005
         self.rpos_est_k = np.array([0, 0, 0])
         self.cam_offset = np.array([0, 0, 0]) #cam distance to center
         self.rpos_init = False
@@ -61,7 +63,7 @@ class Utils(object):
         else:
             rpos_est = pos_info["dlt_mav_car_gps_enu"]
         
-        cam_is_ok = True
+        # cam_is_ok = True
         realsense_is_ok = True
         if realsense_is_ok:
             # body: right-front-up
@@ -75,21 +77,26 @@ class Utils(object):
         dlt_pos = np.array([dlt_pos_est[0], dlt_pos_est[1], 3.0-(pos_info["mav_pos"][2]-pos_info["mav_home_pos"][2])])
         self.integral = self.integral + self.Ki.dot(dlt_pos)*dt
         # integral reset???
-        self.SatIntegral(self.integral)
+        self.SatIntegral(self.integral, 1, -1)
 
-        #ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
-        ref_vel_enu = np.array([0, 0, 0])
+        ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
+        # ref_vel_enu = np.array([0, 0, 0])
         print("ref_vel_enu: {}".format(ref_vel_enu))
+        
+        # integral reset???
+        
         if cam_is_ok:
             i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
-            ref_vel_cam_body = pos_info["R_bc"].dot(self.Kp_nu_cam.dot(i_err))
+            self.integral_cam = self.integral_cam + self.Ki_nu_cam.dot(i_err)*dt
+            self.SatIntegral(self.integral_cam, 1, -1)
+            ref_vel_cam_body = pos_info["R_bc"].dot(self.Kp_nu_cam.dot(i_err) + self.integral_cam)
             if not self.USE_CAM_FOR_X:
                 ref_vel_cam_body[0] = 0
             ref_vel_cam_body[1] = 0
             print("ref_vel_cam_body: {}".format(ref_vel_cam_body))
             ref_vel_cam_enu = pos_info["mav_R"].dot(ref_vel_cam_body + self.cam_offset)
             print("ref_vel_cam_enu: {}".format(ref_vel_cam_enu))
-            ref_vel_enu = (1 - track_quality/3) * ref_vel_enu + track_quality/3 * ref_vel_cam_enu
+            ref_vel_enu = (1 - track_quality) * ref_vel_enu + track_quality * ref_vel_cam_enu
 
         cmd_yawrate = self.sat(self.P*pos_info["rel_yaw"], 2)
         if cam_is_ok:
@@ -159,10 +166,10 @@ class Utils(object):
         else:
             return vz
 
-    def SatIntegral(self, a):
+    def SatIntegral(self, a, up, down):
         for i in range(len(a)):
-            if a[i] > 1:
-                a[i] = 1
-            elif a[i] < -1:
-                a[i] = -1
+            if a[i] > up:
+                a[i] = up
+            elif a[i] < down:
+                a[i] = down
         return a

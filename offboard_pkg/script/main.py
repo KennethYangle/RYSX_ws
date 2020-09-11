@@ -63,9 +63,11 @@ def mav_pose_cb(msg):
     mav_pos = [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]
     q0, q1, q2, q3 = msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z
     mav_yaw = math.atan2(2*(q0*q3+q1*q2), 1-2*(q2*q2+q3*q3))
-    mav_R = np.array([[q0**2+q1**2-q2**2-q3**2, 2*(q1*q2-q0*q3), 2*(q1*q3+q0*q2)],
+    R_ae = np.array([[q0**2+q1**2-q2**2-q3**2, 2*(q1*q2-q0*q3), 2*(q1*q3+q0*q2)],
                       [2*(q1*q2+q0*q3), q0**2-q1**2+q2**2-q3**2, 2*(q2*q3-q0*q1)],
                       [2*(q1*q3-q0*q2), 2*(q2*q3+q0*q1), q0**2-q1**2-q2**2+q3**2]])
+    R_ba = np.array([[0,1,0], [-1,0,0], [0,0,1]])
+    mav_R = R_ae.dot(R_ba)
 
 def mav_vel_cb(msg):
     global mav_vel, is_initialize_2
@@ -253,6 +255,7 @@ if __name__=="__main__":
         if cnt % 10 == 0:
             print("state_name: {}".format(state_name))
         is_initialize_finish = is_initialize_1 and is_initialize_2 and is_initialize_3 and is_initialize_4 and is_initialize_5 and is_initialize_6 and is_initialize_7 and is_initialize_8
+        # is_initialize_finish = True
         if not is_initialize_finish:
             print("mav_pose_cb: {}, mav_vel_cb: {}, car_pose_cb: {}, car_vel_cb: {}, rcin_cb: {}, pos_image_cb: {}, mav_home_cb: {}, car_home_cb: {}".format(is_initialize_1, is_initialize_2, is_initialize_3, is_initialize_4, is_initialize_5, is_initialize_6, is_initialize_7, is_initialize_8))
         else:
