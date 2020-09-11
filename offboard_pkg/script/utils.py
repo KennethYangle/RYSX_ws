@@ -12,12 +12,14 @@ class Utils(object):
         self.Eb = 6356725
         self.FLIGHT_H = 3
         self.saftyz = 0.3
-        self.USE_CAM_FOR_X = True
+        self.USE_CAM_FOR_X = False
         self.GPS_SLIDING = False
         self.we_gps = np.array([[0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]])
         self.we_realsense = 1.0
         self.wedt_realsense = 0.1
-        self.Kp = np.array([[0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]])
+        self.Kp = np.array([[2.0, 0, 0], [0, 2.0, 0], [0, 0, 0.5]])
+        self.Ki = np.array([[0.1, 0, 0], [0, 0.1, 0], [0, 0, 0.1]])
+        self.integral = np.array([0, 0, 0])
         self.Kp_nu_cam = np.array([[0.005, 0, 0], [0, 0.005, 0], [0, 0, 0.005]])
         self.cam_offset = np.array([0, 0, 0])
         self.Kp_yaw_cam = 0.00001
@@ -59,13 +61,21 @@ class Utils(object):
         else:
             rpos_est = pos_info["dlt_mav_car_gps_enu"]
 
-        # if realsense_is_ok:
-        #     # body: right-front-up
-        #     rpos_est_body = pos_info["mav_R"].T.dot(rpos_est)
-        #     rpos_est_body[1] = rpos_est_body[1] + track_quality*(self.we_realsense*(depth - rpos_est_body[1] + self.wedt_realsense*(depth - rpos_est_body[1]*dt)))
-        #     rpos_est = pos_info["mav_R"].dot(rpos_est_body)
+        if realsense_is_ok:
+            # body: right-front-up
+            rpos_est_body = pos_info["mav_R"].T.dot(rpos_est)
+            #rpos_est_body[1] = rpos_est_body[1] + track_quality*(self.we_realsense*(-depth - rpos_est_body[1] + self.wedt_realsense*(-depth - rpos_est_body[1]*dt)))
+            rpos_est = pos_info["mav_R"].dot(rpos_est_body)
+            print("rpos_est_body: {}".format(rpos_est_body))
+            print("rpos_est_body: {}".format(rpos_est_body))
         
-        ref_vel_enu = self.Kp.dot(rpos_est + pos_info["virtual_car_pos"]) + self.D*np.array(pos_info["rel_vel"])
+        dlt_pos_est = rpos_est + pos_info["virtual_car_pos"]
+        dlt_pos = np.array([dlt_pos_est[0], dlt_pos_est[1], 3.0-(pos_info["mav_pos"][2]-pos_info["mav_home_pos"][2])])
+        self.integral = self.integral + self.Ki.dot(dlt_pos)*dt
+        # integral reset???
+        self.SatIntegral(self.integral)
+
+        ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
         print("ref_vel_enu: {}".format(ref_vel_enu))
         if cam_is_ok:
             i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
@@ -75,11 +85,12 @@ class Utils(object):
                 ref_vel_cam_enu[0] = 0
             ref_vel_cam_enu[1] = 0
             print("ref_vel_cam_enu: {}".format(ref_vel_cam_enu))
-            ref_vel_enu = ref_vel_enu + track_quality * ref_vel_cam_enu
+            ref_vel_enu = (1 - track_quality/3) * ref_vel_enu + track_quality/3 * ref_vel_cam_enu
 
         cmd_yawrate = self.sat(self.P*pos_info["rel_yaw"], 2)
         if cam_is_ok:
             yaw_cam = -i_err[0]
+            print("yaw_cam: {}".format(yaw_cam))
             cmd_yawrate = cmd_yawrate + self.Kp_yaw_cam*yaw_cam
 
         cmd_vel = self.sat(ref_vel_enu, 3*car_velocity)
@@ -143,3 +154,11 @@ class Utils(object):
             return -self.saftyz
         else:
             return vz
+
+    def SatIntegral(self, a):
+        for i in range(len(a)):
+            if a[i] > 1:
+                a[i] = 1
+            elif a[i] < -1:
+                a[i] = -1
+        return a
