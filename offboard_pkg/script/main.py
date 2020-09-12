@@ -18,7 +18,7 @@ from utils import Utils
 from Queue import Queue
 
 # Simulation of RealFlight
-MODE = "Simulation"
+MODE = "RealFlight"
 current_state = State()
 ch5, ch6, ch7, ch8, ch9 = 0, 0, 0, 0, 1
 is_initialize_1, is_initialize_2, is_initialize_3, is_initialize_4, is_initialize_5, is_initialize_6, is_initialize_7, is_initialize_8 = False, False, False, False, False, False, False, False
@@ -36,7 +36,7 @@ car_home_pos = [0, 0, 0]
 car_home_yaw = 0
 car_home_geo = [0, 0, 0]
 pos_i = [0, 0, 0, 0, 0]
-car_velocity = 2
+car_velocity = 1
 state_name = "InitializeState"
 command = TwistStamped()
 q = Queue()
@@ -307,8 +307,8 @@ if __name__=="__main__":
         dlt_pos = np.array([dlt_pos_raw[0], dlt_pos_raw[1], FLIGHT_H-(mav_pos[2]-mav_home_pos[2])])
         dlt_mav_car_gps_enu = -mav_local + dif_car_mav_pos + car_local
         dlt_mav_car_gps_enu[2] = dlt_pos[2]
-        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_pos: {}".format(
-               dlt_home_yaw,     car_yaw_cor,     mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_pos))
+        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_pos: {}\ndlt_mav_car_gps_enu: {}".format(
+               dlt_home_yaw,     car_yaw_cor,     mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_pos, dlt_mav_car_gps_enu))
 
         dlt_vel = np.array(car_vel) - np.array(mav_vel)
         dlt_yaw = minAngleDiff(car_yaw_cor, mav_yaw)
@@ -322,8 +322,8 @@ if __name__=="__main__":
             print("pos_i: {}".format(pos_i))
             print("depth: {}".format(depth))
 
-        # cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity)
-        cmd = sm.update(keys, is_initialize_finish, pos_info, [0,0,0,0,0], depth, car_velocity)
+        cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity)
+        # cmd = sm.update(keys, is_initialize_finish, pos_info, [0,0,0,0,0], depth, car_velocity)
         print("cmd: {}".format(cmd))
         if cmd is not None:
             if cmd == "failed":
