@@ -20,7 +20,7 @@ from Queue import Queue
 # Simulation of RealFlight
 MODE = "RealFlight"
 current_state = State()
-ch5, ch6, ch7, ch8, ch9 = 0, 0, 0, 0, 1
+ch5, ch6, ch7, ch8, ch9, ch11, ch14 = 0, 0, 0, 0, 1, 1, 1
 is_initialize_1, is_initialize_2, is_initialize_3, is_initialize_4, is_initialize_5, is_initialize_6, is_initialize_7, is_initialize_8 = False, False, False, False, False, False, False, False
 mav_pos = [0, 0, 0]
 mav_vel = [0, 0, 0]
@@ -36,7 +36,7 @@ car_home_pos = [0, 0, 0]
 car_home_yaw = 0
 car_home_geo = [0, 0, 0]
 pos_i = [0, 0, 0, 0, 0]
-car_velocity = 1
+car_velocity = 4
 state_name = "InitializeState"
 command = TwistStamped()
 q = Queue()
@@ -44,11 +44,12 @@ maxQ = 100
 sumQ = 0.0
 # follow_mode: 0, ll=follow_distance; 1, ll=norm(car_home, mav_home)
 follow_mode = 0
-follow_distance = 2
+follow_distance = 3
 u = Utils()
 home_dx, home_dy = 0, 0
-FLIGHT_H = 3
+FLIGHT_H = 2
 depth = -1
+original_offset = np.array([0, 0, 0])
 
 def spin():
     rospy.spin()
@@ -98,17 +99,19 @@ def car_vel_cb(msg):
     car_vel = [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z]
 
 def rcin_cb(msg):
-    global ch5, ch6, ch7, ch8, ch9, is_initialize_5
+    global ch5, ch6, ch7, ch8, ch9, ch11, ch14, is_initialize_5
     is_initialize_5 = True
-    last_ch5, last_ch6, last_ch7, last_ch8, last_ch9 = ch5, ch6, ch7, ch8, ch9
+    last_ch5, last_ch6, last_ch7, last_ch8, last_ch9, last_ch11, last_ch14 = ch5, ch6, ch7, ch8, ch9, ch11, ch14
     chs = msg.channels
     ch5 = 2 if chs[4] < 1300 else 1 if chs[4] < 1700 else 0
     ch6 = 2 if chs[5] < 1300 else 1 if chs[5] < 1700 else 0
     ch7 = 2 if chs[6] < 1300 else 1 if chs[6] < 1700 else 0
     ch8 = 2 if chs[7] < 1300 else 1 if chs[7] < 1700 else 0
     ch9 = 2 if chs[8] < 1300 else 1 if chs[8] < 1700 else 0
-    if ch5!=last_ch5 or ch6!=last_ch6 or ch7!=last_ch7 or ch8!=last_ch8 or ch9!=last_ch9:
-        print("ch5: {}, ch6: {}, ch7: {}, ch8: {}, ch9: {}".format(ch5, ch6, ch7, ch8, ch9))
+    ch11 = 1 if chs[10] < 1500 else 0
+    ch14 = 1 if chs[10] < 1500 else 0
+    if ch5!=last_ch5 or ch6!=last_ch6 or ch7!=last_ch7 or ch8!=last_ch8 or ch9!=last_ch9 or ch11!=last_ch11 or ch14!=last_ch14:
+        print("ch5: {}, ch6: {}, ch7: {}, ch8: {}, ch9: {}, ch11: {}, ch14: {}".format(ch5, ch6, ch7, ch8, ch9, ch11, ch14))
 
 def call(event):
     global ch5, ch6, ch7, ch8, ch9
@@ -261,6 +264,14 @@ if __name__=="__main__":
         else:
             if cnt % 100 == 0:
                 print("is_initialize all True")
+        
+        if ch14 == 0:
+            sm.reset()
+            print("All states have been reset.")
+
+        if ch11 == 0:
+            original_offset = np.array(car_pos) - np.array(mav_pos)
+            print("GPS calibration.")
 
         if ch9 == 0 or ch9 == 2:
             try: 
@@ -308,10 +319,11 @@ if __name__=="__main__":
         virtual_car_pos = np.array([-ll*np.cos(car_yaw_cor), -ll*np.sin(car_yaw_cor), 0])
         dlt_pos_raw = -mav_local + dif_car_mav_pos + car_local + virtual_car_pos
         dlt_pos = np.array([dlt_pos_raw[0], dlt_pos_raw[1], FLIGHT_H-(mav_pos[2]-mav_home_pos[2])])
-        dlt_mav_car_gps_enu = -mav_local + dif_car_mav_pos + car_local
-        dlt_mav_car_gps_enu[2] = dlt_pos[2]
-        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_pos: {}\ndlt_mav_car_gps_enu: {}".format(
-               dlt_home_yaw,     car_yaw_cor,     mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_pos, dlt_mav_car_gps_enu))
+        dlt_mav_car_gps_enu_origin = -mav_local + dif_car_mav_pos + car_local
+        dlt_mav_car_gps_enu = np.array(car_pos) - np.array(mav_pos) - original_offset
+        # dlt_mav_car_gps_enu[2] = dlt_pos[2]
+        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
+               dlt_home_yaw,     car_yaw_cor,     mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
 
         dlt_vel = np.array(car_vel) - np.array(mav_vel)
         dlt_yaw = minAngleDiff(car_yaw_cor, mav_yaw)
@@ -319,7 +331,7 @@ if __name__=="__main__":
         pos_info = {"mav_pos": mav_pos, "mav_vel": mav_vel, "mav_yaw": mav_yaw, "mav_R": mav_R, "mav_home_pos": mav_home_pos, 
                     "mav_home_yaw": mav_home_yaw, "car_home_pos": car_home_pos, "rel_pos": dlt_pos, "rel_vel": dlt_vel, 
                     "rel_yaw": dlt_yaw, "dlt_mav_car_gps_enu": dlt_mav_car_gps_enu, "virtual_car_pos": virtual_car_pos, 
-                    "R_bc": np.array([[1,0,0], [0,0,1], [0,-1,0]])}
+                    "R_bc": np.array([[1,0,0], [0,0,1], [0,-1,0]]), "FLIGHT_H": FLIGHT_H}
         print("car_yaw_cor: {}, mav_yaw: {}".format(car_yaw_cor, mav_yaw))
         if pos_i[0] > 0:
             print("pos_i: {}".format(pos_i))

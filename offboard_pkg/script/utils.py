@@ -1,4 +1,5 @@
 import numpy as np
+from avoidance import Avoidance
 
 class Utils(object):
     def __init__(self, P=0.5, D=0.5, P_i=0.005):
@@ -28,6 +29,7 @@ class Utils(object):
         self.rpos_est_k = np.array([0, 0, 0])
         self.cam_offset = np.array([0, 0, 0]) #cam distance to center
         self.rpos_init = False
+        self.track_quality_k = 0
 
     def sat(self, a, maxv):
         n = np.linalg.norm(a)
@@ -71,19 +73,23 @@ class Utils(object):
             #rpos_est_body[1] = rpos_est_body[1] + track_quality*(self.we_realsense*(-depth - rpos_est_body[1] + self.wedt_realsense*(-depth - rpos_est_body[1]*dt)))
             rpos_est = pos_info["mav_R"].dot(rpos_est_body)
             print("rpos_est_body: {}".format(rpos_est_body))
-            print("rpos_est_body: {}".format(rpos_est_body))
+            print("rpos_est: {}".format(rpos_est))
         
+        rpos_est_body = pos_info["mav_R"].T.dot(rpos_est)
+        avo = Avoidance(3*car_velocity)
+        avo_cmd = avo.controller(rpos_est_body)
+        print("avoidance: {}".format(avo_cmd))
+
         dlt_pos_est = rpos_est + pos_info["virtual_car_pos"]
-        dlt_pos = np.array([dlt_pos_est[0], dlt_pos_est[1], 3.0-(pos_info["mav_pos"][2]-pos_info["mav_home_pos"][2])])
+        dlt_pos = np.array([dlt_pos_est[0], dlt_pos_est[1], pos_info["FLIGHT_H"]-(pos_info["mav_pos"][2]-pos_info["mav_home_pos"][2])])
+        print("dlt_pos".format(dlt_pos))
         self.integral = self.integral + self.Ki.dot(dlt_pos)*dt
         # integral reset???
         self.SatIntegral(self.integral, 1, -1)
 
-        ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
-        # ref_vel_enu = np.array([0, 0, 0])
+        # ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
+        ref_vel_enu = np.array([0, 0, 0])
         print("ref_vel_enu: {}".format(ref_vel_enu))
-        
-        # integral reset???
         
         if cam_is_ok:
             i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
@@ -96,7 +102,16 @@ class Utils(object):
             print("ref_vel_cam_body: {}".format(ref_vel_cam_body))
             ref_vel_cam_enu = pos_info["mav_R"].dot(ref_vel_cam_body + self.cam_offset)
             print("ref_vel_cam_enu: {}".format(ref_vel_cam_enu))
-            ref_vel_enu = (1 - track_quality) * ref_vel_enu + track_quality * ref_vel_cam_enu
+            #lowpass filter
+            if self.track_quality_k > 0.8:
+                track_quality = 1.0
+            self.track_quality_k = self.track_quality_k + 0.3*(track_quality - self.track_quality_k)
+            ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * ref_vel_cam_enu
+        else:
+            track_quality = 0
+            self.track_quality_k = self.track_quality_k + 0.3*(track_quality - self.track_quality_k)
+            ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu
+
 
         cmd_yawrate = self.sat(self.P*pos_info["rel_yaw"], 2)
         if cam_is_ok:
