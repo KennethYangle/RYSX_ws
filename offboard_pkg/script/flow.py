@@ -191,6 +191,12 @@ class StateMachine(object):
 
         self.util = Utils()
 
+    def reset(self):
+        self.state = self.initialize_state
+        self.state_name = "InitializeState"
+        self.last_state = None
+        self.util = Utils()
+
     def getInitializeState(self):
         return self.initialize_state
     def getIdleState(self):
