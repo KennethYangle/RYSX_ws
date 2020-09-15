@@ -9,6 +9,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
+  image_transport
   geometry_msgs
   pcl_conversions
   pcl_ros
@@ -17,6 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
 )
+find_package(OpenCV QUIET)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -124,6 +127,8 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
+include_directories("/usr/include")
+include_directories(${OpenCV_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -159,7 +164,7 @@ add_executable(point_node src/point.cpp)
 # )
 target_link_libraries(listener_node ${catkin_LIBRARIES})
 target_link_libraries(commander_node ${catkin_LIBRARIES})
-target_link_libraries(point_node ${catkin_LIBRARIES})
+target_link_libraries(point_node ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 #############
 ## Install ##
