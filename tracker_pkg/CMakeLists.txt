@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(tracker_pkg)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
+set(cv_bridge_DIR /usr/local/share/cv_bridge/cmake)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -19,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   sensor_msgs
 )
-find_package(OpenCV QUIET)
+find_package(OpenCV 3.3.1 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)

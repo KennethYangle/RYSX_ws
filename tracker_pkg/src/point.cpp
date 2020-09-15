@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     ros::Subscriber image_sub = nh.subscribe("tracker/pos_image", 1, pos_image_cb);
     pub = nh.advertise<geometry_msgs::PoseStamped>("tracker/depth", 1);
 
-    FileStorage fs1("/home/zhenglong/RYSX_ws/src/zero_opencv0/homography.xml", FileStorage::READ);
+    FileStorage fs1("/home/t/RYSX_ws/src/zero_opencv0/homography.xml", FileStorage::READ);
     fs1["homography"] >> homography_from_file;
     cout << homography_from_file << endl;
     fs1.release();
