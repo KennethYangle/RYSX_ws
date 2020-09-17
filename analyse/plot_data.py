@@ -8,37 +8,46 @@ import matplotlib.pyplot as plt
 def main(args):
     f = open(args.log)
     lines = f.readlines() 
-    raw_datas = []
+    nvar = len(args.variable)
+    raw_datas = [[] for v in range(nvar)]
     cnt = 0
-    is_first = True
-    index = []
+    is_first = [True for v in range(nvar)]
+    index = [[] for v in range(nvar)]
+    data_len = [0 for v in range(nvar)]
     for line in lines:
-        if line.startswith(args.variable):
-            tmp = [float(a) for a in re.findall(r'-?\d+\.?\d*e?[-+]?\d*', line)]
-            if is_first:
-                data_len = len(tmp)
-            if len(tmp) == data_len:
-                raw_datas.append(tmp)
-                index.append(cnt)
-            is_first = False
+        for v in range(nvar):
+            if line.startswith(args.variable[v]+":"):
+                tmp = [float(a) for a in re.findall(r'-?\d+\.?\d*e?[-+]?\d*', line)]
+                # print(tmp)
+                if is_first[v]:
+                    data_len[v] = len(tmp)
+                if len(tmp) == data_len[v]:
+                    raw_datas[v].append(tmp)
+                    index[v].append(cnt)
+                is_first[v] = False
         cnt += 1
-    datas = [[] for i in range(len(raw_datas[0]))]
-    for i in range(len(raw_datas)):
-        for j in range(len(raw_datas[0])):
-            # print(i,j,raw_datas[i][j])
-            datas[j].append(raw_datas[i][j])
+    print(data_len)
+    # print(raw_datas)
+    datas = [[[] for i in range(len(raw_datas[v][0]))] for v in range(nvar)]
+    for v in range(nvar):
+        for i in range(len(raw_datas[v])):
+            for j in range(len(raw_datas[v][0])):
+                # print(i,j,raw_datas[i][j])
+                datas[v][j].append(raw_datas[v][i][j])
     # print(datas)
     
-    for i in range(len(datas)):
+    for i in range(len(datas[0])):
         plt.figure(i)
-        plt.plot(index, datas[i])
+        for v in range(nvar):
+            plt.plot(index[v], datas[v][i], label="{}[{}]".format(args.variable[v], i))
+        plt.legend()
     plt.show()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('log', help='log file path')
-    parser.add_argument('variable', help='variable to plot')
+    parser.add_argument('variable', nargs='+', help='variable to plot')
     args = parser.parse_args()
     print(args)
     main(args)

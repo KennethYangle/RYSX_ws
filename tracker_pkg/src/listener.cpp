@@ -18,8 +18,8 @@ int main(int argc, char** argv)
 
         DataPack DP;
         memcpy(DP.pack_field, SS.buff, 40*sizeof(unsigned char));
-        msg.data.push_back(DP.data_field[0]);   // x
-        msg.data.push_back(DP.data_field[1]);   // y
+        msg.data.push_back(DP.data_field[0]+DP.data_field[2]/2);   // x
+        msg.data.push_back(DP.data_field[1]+DP.data_field[3]/2);   // y
         msg.data.push_back(DP.data_field[2]);   // bbox_w
         msg.data.push_back(DP.data_field[3]);   // bbox_h
         msg.data.push_back(DP.data_field[4]);   // confidence
