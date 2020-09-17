@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find tracker_pkg)/launch/rs_aligned_depth.launch" />
+    <include file="$(find tracker_pkg)/launch/tracker.launch" />
+    <node name="point_node" pkg="tracker_pkg" type="point_node" output="screen" />
+</launch>

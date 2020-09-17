@@ -20,6 +20,8 @@ cv::Point2i center_point(0, 0);
 cv::Mat homography_from_file;
 ros::Publisher pub;
 geometry_msgs::PoseStamped depth;
+int depth_w = 640;
+int depth_h = 480;
 
 void pos_image_cb(const std_msgs::Float32MultiArray &input)
 {
@@ -33,36 +35,43 @@ void pos_image_cb(const std_msgs::Float32MultiArray &input)
         perspectiveTransform(points_projection, points_back_projection, homography_from_file);
         center_point.x = int(points_back_projection[0].x);
         center_point.y = int(points_back_projection[0].y);
+        cout << "nano: " << points_projection[0] << "  --->  " << "D435i: " << center_point << endl;
     }
-    cout << center_point << endl;
 }
 
 void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
 {
-    if (center_point.x <= 0) {
+    depth.pose.position.x = depth.pose.position.y = depth.pose.position.z = -1;
+    if (center_point.x <= 0 || center_point.x >= depth_w || center_point.y <= 0 || center_point.y >= depth_h) {
         depth.pose.position.x = depth.pose.position.y = depth.pose.position.z = -1;
     }
-    else {
+    else 
+    {
         try
         {
+            cv::imshow("depth_view", cv_bridge::toCvShare(depth_msg, sensor_msgs::image_encodings::TYPE_32FC1)->image);
             depth_ptr = cv_bridge::toCvCopy(depth_msg, sensor_msgs::image_encodings::TYPE_32FC1);
+            cv::waitKey(1);
         }
         catch (cv_bridge::Exception &e)
         {
             ROS_ERROR("Could not convert from '%s' to 'mono16'.", depth_msg->encoding.c_str());
         }
         depth_pic = depth_ptr->image;
-        cv::imshow("depth_view", depth_pic);
-        cv::circle(depth_pic, center_point, 10, cv::Scalar(0,255,0),1, CV_AA);
-        cv::waitKey(1);
 
         float depth_sum = 0;
+        int cnt = 0;
         for (int i=center_point.x-5; i<=center_point.x+5; i++) {
             for (int j=center_point.y-5; j<=center_point.y+5; j++) {
-                depth_sum += depth_pic.ptr<float>(i)[j];
+                float dd = depth_pic.ptr<float>(i)[j];
+                if (dd > 10 && dd < 8182) {
+                    cnt++;
+                    // cout << i << ", " << j << ": " << dd << endl;
+                    depth_sum += dd;
+                }
             }
         }
-        depth.pose.position.x = depth.pose.position.y = depth.pose.position.z = depth_sum/121;
+        depth.pose.position.x = depth.pose.position.y = depth.pose.position.z = depth_sum/cnt;
     }
     
     pub.publish(depth);
