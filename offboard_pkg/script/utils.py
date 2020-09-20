@@ -31,6 +31,7 @@ class Utils(object):
         self.rpos_init = False
         self.track_quality_k = 0
         self.CAM_GPS_COM = False
+        self.cam_gps_err = np.array([0, 0, 0])
         self.cam_gps_err_kp = np.array([[0.01, 0, 0], [0, 0.01, 0], [0, 0, 0.02]])
 
 
@@ -87,7 +88,7 @@ class Utils(object):
 
         dlt_pos_est = rpos_est + pos_info["virtual_car_pos"]
         dlt_pos = np.array([dlt_pos_est[0], dlt_pos_est[1], pos_info["FLIGHT_H"]-(pos_info["mav_pos"][2]-pos_info["mav_home_pos"][2])])
-        print("dlt_pos".format(dlt_pos))
+        print("dlt_pos: {}".format(dlt_pos))
         self.integral = self.integral + self.Ki.dot(dlt_pos)*dt
         # integral reset???
         self.SatIntegral(self.integral, 1, -1)

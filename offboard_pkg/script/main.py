@@ -18,7 +18,7 @@ from utils import Utils
 from Queue import Queue
 
 # Simulation of RealFlight
-MODE = "RealFlight"
+MODE = "Simulation"
 current_state = State()
 ch5, ch6, ch7, ch8, ch9, ch11, ch14 = 0, 0, 0, 0, 1, 1, 1
 is_initialize_1, is_initialize_2, is_initialize_3, is_initialize_4, is_initialize_5, is_initialize_6, is_initialize_7, is_initialize_8 = False, False, False, False, False, False, False, False
