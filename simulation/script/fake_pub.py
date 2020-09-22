@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #coding=utf-8
 
+import os
+import json
 import numpy as np
 import sys
 import rospy
@@ -13,7 +15,6 @@ from utils import Utils
 
 # JMAVSIM or GAZEBO
 SIM_MODE = "GAZEBO"
-u = Utils()
 
 def talker():
     car_pos_pub = rospy.Publisher("mavros_ruying/local_position/pose", PoseStamped, queue_size=10)
@@ -91,4 +92,8 @@ def talker():
         rate.sleep()
 
 if __name__ == '__main__':
+    setting_file = open(os.path.join(os.path.expanduser('~'),"RYSX_ws/src","settings.json"))
+    setting = json.load(setting_file)
+    u = Utils(setting["Utils"])
+
     talker()

@@ -2,37 +2,35 @@ import numpy as np
 from avoidance import Avoidance
 
 class Utils(object):
-    def __init__(self, P=0.5, D=0.5, P_i=0.005):
-        self.P = P
-        self.D = D
-        self.P_i = P_i
-        self.P_h = 0.005
-        self.WIDTH = 640
-        self.HEIGHT = 480
-        self.Ea = 6378137
-        self.Eb = 6356725
-        self.FLIGHT_H = 3
-        self.saftyz = 0.3
-        self.USE_CAM_FOR_X = True
-        self.GPS_SLIDING = False
-        self.we_gps = np.array([[0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]])
-        self.we_realsense = 1.0
-        self.wedt_realsense = 0.1
-        self.Kp = np.array([[1.0, 0, 0], [0, 1.0, 0], [0, 0, 0.5]])
-        self.Ki = np.array([[0.1, 0, 0], [0, 0.1, 0], [0, 0, 0.1]])
+    def __init__(self, params):
+        self.P = params["P"]
+        self.D = params["D"]
+        self.P_i = params["P_i"]
+        self.P_h = params["P_h"]
+        self.WIDTH = params["WIDTH"]
+        self.HEIGHT = params["HEIGHT"]
+        self.Ea = params["Ea"]
+        self.Eb = params["Eb"]
+        self.saftyz = params["saftyz"]
+        self.USE_CAM_FOR_X = params["USE_CAM_FOR_X"]
+        self.GPS_SLIDING = params["GPS_SLIDING"]
+        self.we_gps = np.array(params["we_gps"])
+        self.we_realsense = params["we_realsense"]
+        self.wedt_realsense = params["wedt_realsense"]
+        self.Kp = np.array(params["Kp"])
+        self.Ki = np.array(params["Ki"])
         self.integral = np.array([0, 0, 0])
-        self.Kp_nu_cam = np.array([[0.01, 0, 0], [0, 0.01, 0], [0, 0, 0.02]])
-        self.Ki_nu_cam = np.array([[0.001, 0, 0], [0, 0.001, 0], [0, 0, 0.002]])
+        self.Kp_nu_cam = np.array(params["Kp_nu_cam"])
+        self.Ki_nu_cam = np.array(params["Ki_nu_cam"])
         self.integral_cam = np.array([0, 0, 0])
-        self.Kp_yaw_cam = 0.0005
+        self.Kp_yaw_cam = params["Kp_yaw_cam"]
         self.rpos_est_k = np.array([0, 0, 0])
-        self.cam_offset = np.array([0, 0, 100]) # cam distance to center on body coordinate in pixel uint, if z > 0, object appears at the bottom of the image
+        self.cam_offset = np.array(params["cam_offset"]) # cam distance to center on body coordinate in pixel uint, if z > 0, object appears at the bottom of the image
         self.rpos_init = False
         self.track_quality_k = 0
-        self.CAM_GPS_COM = False
+        self.CAM_GPS_COM = params["CAM_GPS_COM"]
         self.cam_gps_err = np.array([0, 0, 0])
-        self.cam_gps_err_kp = np.array([[0.01, 0, 0], [0, 0.01, 0], [0, 0, 0.02]])
-
+        self.cam_gps_err_kp = np.array(params["cam_gps_err_kp"])
 
     def sat(self, a, maxv):
         n = np.linalg.norm(a)

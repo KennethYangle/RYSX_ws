@@ -1,0 +1,32 @@
+{
+    "Docs": "config.md",
+    "MODE": "Simulation",
+    "car_velocity": 4,
+    "follow_mode": 0,
+    "follow_distance": 3,
+    "FLIGHT_H": 2,
+    "Utils": {
+        "P": 0.5,
+        "D": 0.5,
+        "P_i": 0.005,
+        "P_h": 0.005,
+        "WIDTH": 640,
+        "HEIGHT": 480,
+        "Ea": 6378137,
+        "Eb": 6356725,
+        "saftyz": 0.3,
+        "USE_CAM_FOR_X": true,
+        "GPS_SLIDING": false,
+        "we_gps": [[0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]],
+        "we_realsense": 1.0,
+        "wedt_realsense": 0.1,
+        "Kp": [[1.0, 0, 0], [0, 1.0, 0], [0, 0, 0.5]],
+        "Ki": [[0.1, 0, 0], [0, 0.1, 0], [0, 0, 0.1]],
+        "Kp_nu_cam": [[0.01, 0, 0], [0, 0.01, 0], [0, 0, 0.02]],
+        "Ki_nu_cam": [[0.001, 0, 0], [0, 0.001, 0], [0, 0, 0.002]],
+        "Kp_yaw_cam": 0.0005,
+        "cam_offset": [0, 0, 0],
+        "CAM_GPS_COM": false,
+        "cam_gps_err_kp": [[0.01, 0, 0], [0, 0.01, 0], [0, 0, 0.02]]
+    }
+}

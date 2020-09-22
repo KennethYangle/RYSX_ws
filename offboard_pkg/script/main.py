@@ -2,6 +2,8 @@
 #coding=utf-8
 
 import rospy
+import os
+import json
 import numpy as np
 import math
 import time
@@ -18,7 +20,6 @@ from utils import Utils
 from Queue import Queue
 
 # Simulation of RealFlight
-MODE = "Simulation"
 current_state = State()
 ch5, ch6, ch7, ch8, ch9, ch11, ch14 = 0, 0, 0, 0, 1, 1, 1
 is_initialize_1, is_initialize_2, is_initialize_3, is_initialize_4, is_initialize_5, is_initialize_6, is_initialize_7, is_initialize_8 = False, False, False, False, False, False, False, False
@@ -36,18 +37,12 @@ car_home_pos = [0, 0, 0]
 car_home_yaw = 0
 car_home_geo = [0, 0, 0]
 pos_i = [0, 0, 0, 0, 0]
-car_velocity = 4
 state_name = "InitializeState"
 command = TwistStamped()
 q = Queue()
 maxQ = 100
 sumQ = 0.0
-# follow_mode: 0, ll=follow_distance; 1, ll=norm(car_home, mav_home)
-follow_mode = 0
-follow_distance = 3
-u = Utils()
 home_dx, home_dy = 0, 0
-FLIGHT_H = 2
 depth = -1
 original_offset = np.array([0, 0, 0])
 
@@ -183,6 +178,18 @@ def angleLimiting(a):
 
 
 if __name__=="__main__":
+    setting_file = open(os.path.join(os.path.expanduser('~'),"RYSX_ws/src","settings.json"))
+    setting = json.load(setting_file)
+    print(json.dumps(setting, indent=4))
+
+    MODE = setting["MODE"]
+    car_velocity = setting["car_velocity"]
+    # follow_mode: 0, ll=follow_distance; 1, ll=norm(car_home, mav_home)
+    follow_mode = setting["follow_mode"]
+    follow_distance = setting["follow_distance"]
+    FLIGHT_H = setting["FLIGHT_H"]
+    u = Utils(setting["Utils"])
+
     rospy.init_node('offb_node', anonymous=True)
     spin_thread = threading.Thread(target = spin)
     spin_thread.start()
@@ -246,7 +253,7 @@ if __name__=="__main__":
 
     # Instantiate StateMachine object
     geo_fence = [-1000000,-1000000, 2000000, 1000000]
-    sm = StateMachine(geo_fence)
+    sm = StateMachine(geo_fence, setting)
 
     last_request = rospy.Time.now()
 

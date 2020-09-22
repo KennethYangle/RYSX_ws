@@ -162,8 +162,9 @@ class FailedState(object):
 
 # 状态机
 class StateMachine(object):
-    def __init__(self, geo_fence):
+    def __init__(self, geo_fence, setting):
         self.geo_fence = geo_fence
+        self.setting = setting
         self.outrange_cnt = 0
         self.outrange_cnt2 = 0
         self.outrange_th = 100
@@ -189,13 +190,13 @@ class StateMachine(object):
         self.state_name = "InitializeState"
         self.last_state = None
 
-        self.util = Utils()
+        self.util = Utils(self.setting["Utils"])
 
     def reset(self):
         self.state = self.initialize_state
         self.state_name = "InitializeState"
         self.last_state = None
-        self.util = Utils()
+        self.util = Utils(self.setting["Utils"])
 
     def getInitializeState(self):
         return self.initialize_state
