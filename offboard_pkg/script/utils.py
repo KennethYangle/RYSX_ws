@@ -76,11 +76,11 @@ class Utils(object):
         if self.CAM_GPS_COM:
             rpos_est = rpos_est + self.cam_gps_err
         # Is depth used to calibrate position estimates.
-        realsense_is_ok = False
+        # realsense_is_ok = False
         if realsense_is_ok:
             # body: right-front-up
             rpos_est_body = pos_info["mav_R"].T.dot(rpos_est)
-            rpos_est_body[1] = rpos_est_body[1] + self.track_quality_k*(self.we_realsense*(-depth - rpos_est_body[1] + self.wedt_realsense*(-depth - rpos_est_body[1]*dt)))
+            rpos_est_body[1] = rpos_est_body[1] + self.track_quality_k*(self.we_realsense*(depth - rpos_est_body[1] + self.wedt_realsense*(depth - rpos_est_body[1]*dt)))
             rpos_est = pos_info["mav_R"].dot(rpos_est_body)
             print("rpos_est_body: {}".format(rpos_est_body))
             print("rpos_est: {}".format(rpos_est))
@@ -191,11 +191,11 @@ class Utils(object):
         else:
             return False
 
-    """ 
-    start: [latitude, longitude, altitude]
-    return: [distance from start point to end point in the East, ... North, altitude].
-    """
     def GeoToENU(self, start, end):
+        """ 
+        1. start: [latitude, longitude, altitude]
+        2. return: [distance from start point to end point in the East, ... North, altitude].
+        """
         Ec = self.Eb + (self.Ea - self.Eb) * (90.0 - start[0]) / 90.0
         Ed = Ec * np.cos(start[0] * np.pi / 180)
         dx = (end[1] - start[1]) * Ed * np.pi / 180
