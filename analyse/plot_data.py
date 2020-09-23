@@ -37,7 +37,8 @@ def main(args):
     for i in range(len(datas[0])):
         plt.figure(i)
         for v in range(nvar):
-            plt.plot(index[v], datas[v][i], label="{}[{}]".format(args.variable[v], i))
+            if i < len(datas[v]):
+                plt.plot(index[v], datas[v][i], label="{}[{}]".format(args.variable[v], i))
         plt.legend()
     plt.show()
 

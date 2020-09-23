@@ -80,6 +80,7 @@ class Utils(object):
         if realsense_is_ok:
             # body: right-front-up
             rpos_est_body = pos_info["mav_R"].T.dot(rpos_est)
+            print("rpos_est_body_raw: {}".format(rpos_est_body))
             rpos_est_body[1] = rpos_est_body[1] + self.track_quality_k*(self.we_realsense*(depth - rpos_est_body[1] + self.wedt_realsense*(depth - rpos_est_body[1]*dt)))
             rpos_est = pos_info["mav_R"].dot(rpos_est_body)
             print("rpos_est_body: {}".format(rpos_est_body))
