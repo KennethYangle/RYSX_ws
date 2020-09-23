@@ -39,6 +39,8 @@ def main(args):
         for v in range(nvar):
             if i < len(datas[v]):
                 plt.plot(index[v], datas[v][i], label="{}[{}]".format(args.variable[v], i))
+            else:
+                plt.plot(index[v], datas[v][0], label="{}[{}]".format(args.variable[v], 0))
         plt.legend()
     plt.show()
 
