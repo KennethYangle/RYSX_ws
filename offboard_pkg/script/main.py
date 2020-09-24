@@ -32,6 +32,7 @@ mav_home_yaw = 0
 mav_home_geo = [0, 0, 0]
 car_pos = [0, 0, 0]
 car_vel = [0, 0, 0]
+car_vel_k = np.array([0,0,0])
 car_yaw = 0
 car_home_pos = [0, 0, 0]
 car_home_yaw = 0
@@ -89,9 +90,10 @@ def car_pose_cb(msg):
     # car_yaw = yaw
 
 def car_vel_cb(msg):
-    global car_vel, is_initialize_4
+    global car_vel, car_vel_k, is_initialize_4
     is_initialize_4 = True
     car_vel = [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z]
+    car_vel_k = 0.5*np.array(car_vel) + 0.5*car_vel_k
 
 def rcin_cb(msg):
     global ch5, ch6, ch7, ch8, ch9, ch11, ch14, is_initialize_5
@@ -311,14 +313,12 @@ if __name__=="__main__":
             # else:
             #     pass
 
-        # dlt_home_pos = np.array(car_home_pos) - np.array(mav_home_pos)
-        # home_dx, home_dy = u.GeoToDis(mav_home_geo, car_home_geo)
-        # print("mav_home_geo: {}, car_home_geo: {}, home_dx: {}, home_dy: {}".format(mav_home_geo, car_home_geo, home_dx, home_dy))
-        # ll = follow_distance if follow_mode == 0 else np.linalg.norm([home_dx, home_dy])
-        # print("ll: {}".format(ll))
+
         dlt_home_yaw = minAngleDiff(car_home_yaw, mav_home_yaw)
-        # dlt_pos = np.array(car_pos) - np.array(mav_pos) - dlt_home_pos
         car_yaw_cor = angleLimiting(car_yaw - dlt_home_yaw)
+        # GPS course
+        if np.linalg.norm([car_vel_k[0], car_vel_k[1]]) > 2:
+            car_yaw_cor = np.arctan2(car_vel_k[1], car_vel_k[0])
         mav_local = np.array(mav_pos) - np.array(mav_home_pos)
         dif_car_mav_pos = u.GeoToENU(mav_home_geo, car_home_geo)
         ll = follow_distance if follow_mode == 0 else np.linalg.norm([dif_car_mav_pos[0], dif_car_mav_pos[1]])
@@ -328,7 +328,6 @@ if __name__=="__main__":
         dlt_pos = np.array([dlt_pos_raw[0], dlt_pos_raw[1], FLIGHT_H-(mav_pos[2]-mav_home_pos[2])])
         dlt_mav_car_gps_enu_origin = -mav_local + dif_car_mav_pos + car_local
         dlt_mav_car_gps_enu = np.array(car_pos) - np.array(mav_pos) - original_offset
-        # dlt_mav_car_gps_enu[2] = dlt_pos[2]
         print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
                dlt_home_yaw,     car_yaw_cor,     mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
 
