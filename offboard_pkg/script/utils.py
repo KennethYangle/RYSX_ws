@@ -60,7 +60,8 @@ class Utils(object):
         dt = 0.05 # time interval
         track_quality = pos_i[4] # pos_i[4] is quality, range from 0 to 1
         # Use camera information when tracking close and having good tracking quality.
-        if np.linalg.norm([rpos_est[0], rpos_est[1]]) < 10 and track_quality > 0.6:
+        # if np.linalg.norm([rpos_est[0], rpos_est[1]]) < 10 and track_quality > 0.6:
+        if track_quality > 0.6:
             cam_is_ok = True
         # When RealSense is available, the return depth is greater than 0.
         if depth > 0:
@@ -133,6 +134,7 @@ class Utils(object):
             if self.track_quality_k > 0.8:
                 track_quality = 1.0
             self.track_quality_k = self.track_quality_k + 0.2*(track_quality - self.track_quality_k)
+            print("track_quality_k: {}".format(track_quality_k))            
             # ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * ref_vel_cam_enu
             ref_vel_body = pos_info["mav_R"].T.dot(ref_vel_enu)
             print("ref_vel_body: {}".format(ref_vel_body))

@@ -1,6 +1,6 @@
 {
     "Docs": "config.md",
-    "MODE": "Simulation",
+    "MODE": "RealFlight",
     "car_velocity": 4,
     "follow_mode": 0,
     "follow_distance": 3,

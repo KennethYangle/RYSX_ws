@@ -78,7 +78,7 @@ void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
             depth.pose.position.x = depth.pose.position.y = depth.pose.position.z = -1;
         }
         else {
-            depth.pose.position.x = depth.pose.position.y = depth.pose.position.z = depth_sum/cnt;
+            depth.pose.position.x = depth.pose.position.y = depth.pose.position.z = depth_sum/1000.0/cnt;
         }
         // cout << depth.pose.position.x << endl << endl << endl;
 
