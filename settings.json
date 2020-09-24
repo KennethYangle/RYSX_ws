@@ -1,5 +1,5 @@
 {
-    "Docs": "config.md",
+    "Docs": "settings.md",
     "MODE": "RealFlight",
     "car_velocity": 4,
     "follow_mode": 0,

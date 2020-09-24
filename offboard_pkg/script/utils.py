@@ -134,7 +134,7 @@ class Utils(object):
             if self.track_quality_k > 0.8:
                 track_quality = 1.0
             self.track_quality_k = self.track_quality_k + 0.2*(track_quality - self.track_quality_k)
-            print("track_quality_k: {}".format(track_quality_k))            
+            print("track_quality_k: {}".format(self.track_quality_k))
             # ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * ref_vel_cam_enu
             ref_vel_body = pos_info["mav_R"].T.dot(ref_vel_enu)
             print("ref_vel_body: {}".format(ref_vel_body))
