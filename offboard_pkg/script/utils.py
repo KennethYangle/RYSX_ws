@@ -110,7 +110,7 @@ class Utils(object):
         # cam_is_ok = True
         if cam_is_ok:
             i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
-            i_err_body = pos_info["R_bc"].dot(i_err) + self.cam_offset
+            i_err_body = pos_info["R_bc"].dot(i_err) - self.cam_offset
             i_err_body[1] = 0
             print("i_err_body: {}".format(i_err_body))
             i_err_enu = pos_info["mav_R"].dot(i_err_body)
