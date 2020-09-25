@@ -29,7 +29,7 @@ class Utils(object):
         self.rpos_init = False
         self.track_quality_k = 0
         self.CAM_GPS_COM = params["CAM_GPS_COM"]
-        self.cam_gps_err = np.array([0, 0, 0])
+        self.cam_gps_err_body = np.array([0, 0, 0])
         self.cam_gps_err_kp = np.array(params["cam_gps_err_kp"])
 
     def sat(self, a, maxv):
@@ -75,7 +75,10 @@ class Utils(object):
             rpos_est = pos_info["dlt_mav_car_gps_enu"]
         # Is use cam compensate GPS.
         if self.CAM_GPS_COM:
-            rpos_est = rpos_est + self.cam_gps_err
+            rpos_est_body = pos_info["mav_R"].T.dot(rpos_est)
+            rpos_est_body[0] = rpos_est_body[0] - self.cam_gps_err_body[0]
+            rpos_est_body[2] = rpos_est_body[2] - self.cam_gps_err_body[2]
+            rpos_est = pos_info["mav_R"].dot(rpos_est_body)
         # Is depth used to calibrate position estimates.
         # realsense_is_ok = False
         if realsense_is_ok:
@@ -116,8 +119,8 @@ class Utils(object):
             i_err_enu = pos_info["mav_R"].dot(i_err_body)
 
             # use cam compensate GPS
-            self.cam_gps_err = self.cam_gps_err + self.cam_gps_err_kp.dot(i_err_enu)*dt
-            print("cam_gps_err: {}".format(self.cam_gps_err))
+            self.cam_gps_err_body = self.cam_gps_err_body + self.cam_gps_err_kp.dot(pos_info["mav_R"].T.dot(dlt_pos))
+            print("cam_gps_err_body: {}".format(self.cam_gps_err_body))
             # PI
             self.integral_cam = self.integral_cam + self.Ki_nu_cam.dot(i_err_body)*dt
             self.SatIntegral(self.integral_cam, 1, -1)

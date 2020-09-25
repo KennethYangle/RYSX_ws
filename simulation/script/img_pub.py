@@ -2,6 +2,7 @@
 #coding=utf-8
 
 import numpy as np
+import os, json
 import rospy
 #导入自定义的数据类型
 from geometry_msgs.msg import PoseStamped, TwistStamped
@@ -11,11 +12,13 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from gazebo_msgs.srv import *
 
-
+cnt = 0
 def image_callback(data):
     # define picture to_down' coefficient of ratio
     scaling_factor = 0.5
-    global bridge
+    global bridge, cnt, params
+    cnt += 1
+
     img_pos = Float32MultiArray()
     cv_img = bridge.imgmsg_to_cv2(data, "bgr8")
     hue_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2HSV)
@@ -31,11 +34,17 @@ def image_callback(data):
     else:
         img_pos.data = [0, 0, 0, 0, 0]
 
-    # print(img_pos.vector)
+    if cnt > params["cam_lose_cnt"]:
+        img_pos.data = [0, 0, 0, 0, 0]
     imag_pub.publish(img_pos)
 
 
 if __name__ == '__main__':
+    global params
+    setting_file = open(os.path.join(os.path.expanduser('~'),"RYSX_ws/src","settings.json"))
+    setting = json.load(setting_file)
+    params = setting["Simulation"]
+
     global imag_pub
     imag_pub = rospy.Publisher("tracker/pos_image", Float32MultiArray, queue_size=10)  # 发送图像位置
     rospy.init_node('iris_fpv_cam', anonymous=True)
