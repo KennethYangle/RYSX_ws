@@ -123,8 +123,9 @@ class Utils(object):
             i_err_enu = pos_info["mav_R"].dot(i_err_body)
 
             # use cam compensate GPS
-            self.cam_gps_err_body = self.cam_gps_err_body + self.cam_gps_err_kp.dot(pos_info["mav_R"].T.dot(dlt_pos))
-            print("cam_gps_err_body: {}".format(self.cam_gps_err_body))
+            if np.linalg.norm(i_err_body) < self.HEIGHT/8:
+                self.cam_gps_err_body = self.cam_gps_err_body + self.cam_gps_err_kp.dot(pos_info["mav_R"].T.dot(dlt_pos_est))*dt
+                print("cam_gps_err_body: {}".format(self.cam_gps_err_body))
             # PI
             self.integral_cam = self.integral_cam + self.Ki_nu_cam.dot(i_err_body)*dt
             self.SatIntegral(self.integral_cam, 1, -1)
@@ -138,7 +139,7 @@ class Utils(object):
             # print("ref_vel_cam_enu: {}".format(ref_vel_cam_enu))
 
             # lowpass filter
-            if self.track_quality_k > 0.8:
+            if self.track_quality_k > 0.75:
                 track_quality = 1.0
             self.track_quality_k = self.track_quality_k + 0.2*(track_quality - self.track_quality_k)
             print("track_quality_k: {}".format(self.track_quality_k))
