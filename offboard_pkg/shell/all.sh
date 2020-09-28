@@ -1,9 +1,10 @@
 #! /bin/bash
 
 # Set FC into Hex+ mode
-~/DartTracker/DartTracker 127.0.0.1 0.42 0.06 & PID0=$!
+~/DartTracker/DartTracker 127.0.0.1 0.35 0.04 & PID0=$!
 sleep 5s
-roslaunch tracker_pkg calc_depth.launch & PID3=$!
+# roslaunch tracker_pkg calc_depth.launch & PID3=$!
+roslaunch tracker_pkg tracker.launch & PID3=$!
 sleep 10s
 roslaunch mavros px4.launch fcu_url:="/dev/ttyACM0:57600" & PID1=$!
 sleep 10s

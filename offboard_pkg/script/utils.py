@@ -31,6 +31,8 @@ class Utils(object):
         self.CAM_GPS_COM = params["CAM_GPS_COM"]
         self.cam_gps_err_body = np.array([0, 0, 0])
         self.cam_gps_err_kp = np.array(params["cam_gps_err_kp"])
+        self.USE_REALSENSE = params["USE_REALSENSE"]
+        self.USE_CAMERA = params["USE_CAMERA"]
 
     def sat(self, a, maxv):
         n = np.linalg.norm(a)
@@ -80,7 +82,8 @@ class Utils(object):
             rpos_est_body[2] = rpos_est_body[2] - self.cam_gps_err_body[2]
             rpos_est = pos_info["mav_R"].dot(rpos_est_body)
         # Is depth used to calibrate position estimates.
-        # realsense_is_ok = False
+        if not self.USE_REALSENSE:
+            realsense_is_ok = False
         if realsense_is_ok:
             # body: right-front-up
             rpos_est_body = pos_info["mav_R"].T.dot(rpos_est)
@@ -110,7 +113,8 @@ class Utils(object):
         print("ref_vel_enu: {}".format(ref_vel_enu))
         
         # camera controller
-        # cam_is_ok = True
+        if not self.USE_CAMERA:
+            cam_is_ok = False
         if cam_is_ok:
             i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
             i_err_body = pos_info["R_bc"].dot(i_err) - self.cam_offset
