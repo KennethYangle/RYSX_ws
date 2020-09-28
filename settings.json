@@ -27,7 +27,9 @@
         "Kp_yaw_cam": 0.0005,
         "cam_offset": [-33, 0, 26],
         "CAM_GPS_COM": true,
-        "cam_gps_err_kp": [[5, 0, 0], [0, 0.5, 0], [0, 0, 5]]
+        "cam_gps_err_kp": [[5, 0, 0], [0, 0.5, 0], [0, 0, 5]],
+        "USE_REALSENSE": false,
+        "USE_CAMERA": false
     },
     "Simulation": {
         "GPS_offset": [0, 1, 0],
