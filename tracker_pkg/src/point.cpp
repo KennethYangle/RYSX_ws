@@ -26,18 +26,20 @@ cv::Point2i center_offset(10, 10);
 
 void pos_image_cb(const std_msgs::Float32MultiArray &input)
 {
-    if (input.data[0] <= 0) {
-        center_point.x = center_point.y = 0;
-    }
-    else {
-        std::vector<Point2f> points_projection;
-        points_projection.push_back(cv::Point(input.data[0], input.data[1]));
-        std::vector<Point2f> points_back_projection;
-        perspectiveTransform(points_projection, points_back_projection, homography_from_file);
-        center_point.x = int(points_back_projection[0].x);
-        center_point.y = int(points_back_projection[0].y);
-        // cout << "nano: " << points_projection[0] << "  --->  " << "D435i: " << center_point << endl;
-    }
+    // if (input.data[0] <= 0) {
+    //     center_point.x = center_point.y = 0;
+    // }
+    // else {
+    //     std::vector<Point2f> points_projection;
+    //     points_projection.push_back(cv::Point(input.data[0], input.data[1]));
+    //     std::vector<Point2f> points_back_projection;
+    //     perspectiveTransform(points_projection, points_back_projection, homography_from_file);
+    //     center_point.x = int(points_back_projection[0].x);
+    //     center_point.y = int(points_back_projection[0].y);
+    //     // cout << "nano: " << points_projection[0] << "  --->  " << "D435i: " << center_point << endl;
+    // }
+    center_point.x = input.data[0];
+    center_point.y = input.data[1];
 }
 
 void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
@@ -106,10 +108,10 @@ int main(int argc, char **argv)
     ros::Subscriber image_sub = nh.subscribe("tracker/pos_image", 1, pos_image_cb);
     pub = nh.advertise<geometry_msgs::PoseStamped>("tracker/depth", 1);
 
-    FileStorage fs1("/home/t/RYSX_ws/src/zero_opencv0/homography.xml", FileStorage::READ);
-    fs1["homography"] >> homography_from_file;
-    cout << homography_from_file << endl;
-    fs1.release();
+    // FileStorage fs1("/home/t/RYSX_ws/src/zero_opencv0/homography.xml", FileStorage::READ);
+    // fs1["homography"] >> homography_from_file;
+    // cout << homography_from_file << endl;
+    // fs1.release();
 
     ros::spin();
     return 0;
