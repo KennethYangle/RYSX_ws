@@ -170,7 +170,7 @@ int main(int argc, char** argv)
     centerPointPub = nh.advertise<std_msgs::Float32MultiArray>("color_tracker_point",10);
 
 	//订阅图像
-	ros::Subscriber sub = nh.subscribe("/camera/color/raw", 10, &imageCallback);
+	ros::Subscriber sub = nh.subscribe("/camera/color/image_raw", 10, &imageCallback);
 
 	
 	ros::spin();
