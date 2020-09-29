@@ -6,7 +6,8 @@
 #include <ros/ros.h>
 #include "sensor_msgs/PointCloud2.h"
 #include <std_msgs/Float32MultiArray.h>
-
+#include "sensor_msgs/Image.h"
+#include <cv_bridge/cv_bridge.h>
 
 
 using namespace cv;
@@ -20,10 +21,12 @@ Point2d trackPoint;
 int test = 10;
 float sigmax;
 float sigmay;
+Point2d colorBlock3;
+
+ros::Publisher centerPointPub;
 
 
-
-Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int lowv, int highh, int highs, int highv,int w, int h)
+Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int lowv, int highh, int highs, int highv)
 {
 	Point2d xy;
 	Mat imgHSV;
@@ -114,7 +117,7 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	
 	
 	imshow("circle", frame);
-	
+	waitKey(30);
 	
 
 
@@ -123,21 +126,35 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	return centexy;
 }
 
-// void imageCallback(const sensor_msgs:: &imgae_msg)
-// {
+void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
+{
+	//red
+	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(imgae_msg, sensor_msgs::image_encodings::BGR8);
+	Mat imgOriginal = cv_ptr -> image;
 
-// }
+	colorBlock3 = frameToCoordinate(3, imgOriginal, 170, 0, 0, 180, 255, 255);
+	
+	std_msgs::Float32MultiArray msg;
+	msg.data.push_back(colorBlock3.x);   // x
+	msg.data.push_back(colorBlock3.y);   // y
+	msg.data.push_back(confidence);   // bbox_w
+	msg.data.push_back(confidence);   // bbox_h
+	msg.data.push_back((sigmax+sigmay)/2);   // confidence
+	centerPointPub.publish(msg);
+	
+	
+}
 
 
 int main(int argc, char** argv)
 {
-    auto cap = VideoCapture("/home/zhou/Desktop/7.mp4");
-    if(!cap.isOpened())
-	{
+    // auto cap = VideoCapture("/home/zhou/Desktop/7.mp4");
+    // if(!cap.isOpened())
+	// {
 		
-		cout<<"no captured...";
-		return 0;
-	}
+	// 	cout<<"no captured...";
+	// 	return 0;
+	// }
         
     // namedWindow("Thresholded Image",WINDOW_NORMAL);
     // resizeWindow("Thresholded Image",1080,960);
@@ -145,58 +162,49 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
 	ros::Time::init();
 
-	//订阅图像
-	// ros::Subscriber sub = nh.subscribe("/camera/aligned_depth_to_color/image_raw", 10, &imageCallback);
+	
 
 
     //发布中心坐标
-    ros::Publisher centerPointPub;
+    
     centerPointPub = nh.advertise<std_msgs::Float32MultiArray>("color_tracker_point",10);
 
+	//订阅图像
+	ros::Subscriber sub = nh.subscribe("/camera/color/raw", 10, &imageCallback);
 
-
+	
+	ros::spin();
 
 
 	ros::Rate loop_rate(1000);
 	
-	while(1)
-		{
+	// while(1)
+	// 	{
 			
-			Mat imgOriginal ;
+	// 		Mat imgOriginal ;
 			
-			cap>> imgOriginal;
-			if(imgOriginal.empty())
-			{
-				cout<<"over...";
-				break;
-			}
-			int width = imgOriginal.cols;
-			int height = imgOriginal.rows;
+	// 		cap>> imgOriginal;
+	// 		if(imgOriginal.empty())
+	// 		{
+	// 			cout<<"over...";
+	// 			break;
+	// 		}
+	// 		int width = imgOriginal.cols;
+	// 		int height = imgOriginal.rows;
 
 
-			//red
-			Point2d colorBlock3 = frameToCoordinate(3, imgOriginal, 170, 0, 0, 180, 255, 255, width, height);
 			
 
-			
-			std_msgs::Float32MultiArray msg;
-			msg.data.push_back(colorBlock3.x);   // x
-			msg.data.push_back(colorBlock3.y);   // y
-			msg.data.push_back(confidence);   // bbox_w
-			msg.data.push_back(confidence);   // bbox_h
-			msg.data.push_back((sigmax+sigmay)/2);   // confidence
-			centerPointPub.publish(msg);
+	// 		auto k = waitKey(30) & 0xff;
+	// 		if(k == 27)
+	// 		{
+	// 			break;
+	// 		}
+	// 		ros::spinOnce();
+	// 		loop_rate.sleep();
+	// 	}
 
-			auto k = waitKey(30) & 0xff;
-			if(k == 27)
-			{
-				break;
-			}
-			ros::spinOnce();
-			loop_rate.sleep();
-		}
-
-	cap.release();
-	destroyAllWindows();
+	// cap.release();
+	// destroyAllWindows();
 	
 }
