@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find tracker_pkg)/launch/rs_aligned_depth.launch" />
+    <node name="colortrack_node" pkg="tracker_pkg" type="colortrack_node" output="screen" />
+</launch>
