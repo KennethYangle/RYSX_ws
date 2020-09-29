@@ -16,7 +16,7 @@
         "Eb": 6356725,
         "saftyz": 0.3,
         "USE_CAM_FOR_X": true,
-        "GPS_SLIDING": false,
+        "GPS_SLIDING": true,
         "we_gps": [[0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]],
         "we_realsense": 1.0,
         "wedt_realsense": 0.1,
@@ -28,8 +28,8 @@
         "cam_offset": [-33, 0, 26],
         "CAM_GPS_COM": true,
         "cam_gps_err_kp": [[5, 0, 0], [0, 0.5, 0], [0, 0, 5]],
-        "USE_REALSENSE": false,
-        "USE_CAMERA": false
+        "USE_REALSENSE": true,
+        "USE_CAMERA": true
     },
     "Simulation": {
         "GPS_offset": [0, 1, 0],

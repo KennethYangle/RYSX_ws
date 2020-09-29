@@ -52,10 +52,10 @@ class Utils(object):
         if pos_info["mav_pos"] == 0:
             return [0,0,0,0]
 
-        # GPS position error for mav and car.
-        dlt_mav_car_gps_enu = pos_info["dlt_mav_car_gps_enu"] 
+        # GPS position error for mav and car. 
+        rpos_est = pos_info["dlt_mav_car_gps_enu"]
         if not self.rpos_init:
-            self.rpos_est_k = dlt_mav_car_gps_enu
+            self.rpos_est_k = rpos_est
             self.rpos_init = True
 
         cam_is_ok = False
@@ -63,22 +63,19 @@ class Utils(object):
         dt = 0.05 # time interval
         track_quality = pos_i[4] # pos_i[4] is quality, range from 0 to 1
         print("track_quality: {}".format(track_quality))
-        # lowpass filter
         if self.track_quality_k > 0.75:
             track_quality = 1.0
-        elif track_quality < 0.2:
-            track_quality = 0
         self.track_quality_k = self.track_quality_k + 0.2*(track_quality - self.track_quality_k)
-        print("track_quality_k: {}".format(self.track_quality_k))
 
         # Use camera information when tracking close and having good tracking quality.
+        # if np.linalg.norm([rpos_est[0], rpos_est[1]]) < 10 and track_quality > 0.6:
         if track_quality > 0.3:
             cam_is_ok = True
         # When RealSense is available, the return depth is greater than 0.
         if depth > 0:
             realsense_is_ok = True
         
-        
+        dlt_mav_car_gps_enu = pos_info["dlt_mav_car_gps_enu"]
         # Is use cam compensate GPS.
         if self.CAM_GPS_COM:
             dlt_mav_car_gps_body = pos_info["mav_R"].T.dot(dlt_mav_car_gps_enu)
@@ -101,10 +98,10 @@ class Utils(object):
             print("rpos_est_body_raw: {}".format(rpos_est_body))
             rpos_est_body[1] = rpos_est_body[1] + self.track_quality_k*(self.we_realsense*(depth - rpos_est_body[1] + self.wedt_realsense*(depth - rpos_est_body[1]*dt)))
             self.rpos_est_k = pos_info["mav_R"].dot(rpos_est_body)
-            print("rpos_est_using_realsense: {}".format(self.rpos_est_k))
+            print("rpos_est using realsense: {}".format(self.rpos_est_k))
         
         # obstacle avoidance component
-        rpos_est_body = pos_info["mav_R"].T.dot(self.rpos_est_k)
+        rpos_est_body = pos_info["mav_R"].T.dot(rpos_est)
         avo = Avoidance(3*car_velocity)
         avo_cmd = avo.controller(rpos_est_body)
         print("avoidance: {}".format(avo_cmd))
@@ -134,7 +131,7 @@ class Utils(object):
 
             # use cam compensate GPS
             if np.linalg.norm(i_err_body) < self.HEIGHT/2:
-                self.cam_gps_err_body = self.cam_gps_err_body + self.cam_gps_err_kp.dot(pos_info["mav_R"].T.dot(self.rpos_est_k))*dt
+                self.cam_gps_err_body = self.cam_gps_err_body + self.cam_gps_err_kp.dot(pos_info["mav_R"].T.dot(pos_info["dlt_mav_car_gps_enu"]))*dt
                 print("cam_gps_err_body: {}".format(self.cam_gps_err_body))
             # PI
             self.integral_cam = self.integral_cam + self.Ki_nu_cam.dot(i_err_body)*dt
@@ -148,6 +145,11 @@ class Utils(object):
             # ref_vel_cam_enu = pos_info["mav_R"].dot(ref_vel_cam_body + self.cam_offset)
             # print("ref_vel_cam_enu: {}".format(ref_vel_cam_enu))
 
+            # lowpass filter
+            # if self.track_quality_k > 0.75:
+            #     track_quality = 1.0
+            # self.track_quality_k = self.track_quality_k + 0.2*(track_quality - self.track_quality_k)
+            print("track_quality_k: {}".format(self.track_quality_k))
             # ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * ref_vel_cam_enu
             ref_vel_body = pos_info["mav_R"].T.dot(ref_vel_enu)
             print("ref_vel_body: {}".format(ref_vel_body))
@@ -155,6 +157,8 @@ class Utils(object):
             ref_vel_body[2] = (1 - self.track_quality_k) * ref_vel_body[2] + self.track_quality_k * self.ref_vel_cam_body[2]
             ref_vel_enu = pos_info["mav_R"].dot(ref_vel_body)
         else:
+            track_quality = 0
+            self.track_quality_k = self.track_quality_k + 0.2*(track_quality - self.track_quality_k)
             self.ref_vel_cam_body[1] = 0
             ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * pos_info["mav_R"].dot(self.ref_vel_cam_body)
 
