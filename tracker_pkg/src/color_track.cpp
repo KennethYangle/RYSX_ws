@@ -165,7 +165,7 @@ int main(int argc, char** argv)
 
     //发布中心坐标
     
-    centerPointPub = nh.advertise<std_msgs::Float32MultiArray>("color_tracker_point",1);
+    centerPointPub = nh.advertise<std_msgs::Float32MultiArray>("tracker/pos_image",1);
 
 	//订阅图像
 	ros::Subscriber sub = nh.subscribe("/camera/color/image_raw", 1, &imageCallback);
