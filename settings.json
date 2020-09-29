@@ -1,6 +1,6 @@
 {
     "Docs": "settings.md",
-    "MODE": "RealFlight",
+    "MODE": "Simulation",
     "car_velocity": 1,
     "follow_mode": 0,
     "follow_distance": 3,
@@ -14,25 +14,26 @@
         "HEIGHT": 480,
         "Ea": 6378137,
         "Eb": 6356725,
-        "saftyz": 0.3,
+        "saftyz": 1.0,
         "USE_CAM_FOR_X": true,
         "GPS_SLIDING": true,
         "we_gps": [[0.5, 0, 0], [0, 0.5, 0], [0, 0, 0.5]],
         "we_realsense": 1.0,
         "wedt_realsense": 0.1,
-        "Kp": [[1.0, 0, 0], [0, 1.0, 0], [0, 0, 0.5]],
+        "Kp": [[1.0, 0, 0], [0, 1.0, 0], [0, 0, 1.0]],
         "Ki": [[0.1, 0, 0], [0, 0.1, 0], [0, 0, 0.1]],
-        "Kp_nu_cam": [[0.01, 0, 0], [0, 0.01, 0], [0, 0, 0.02]],
-        "Ki_nu_cam": [[0.001, 0, 0], [0, 0.001, 0], [0, 0, 0.002]],
+        "Kp_nu_cam": [[0.01, 0, 0], [0, 0.01, 0], [0, 0, 0.01]],
+        "Ki_nu_cam": [[0.001, 0, 0], [0, 0.001, 0], [0, 0, 0.001]],
         "Kp_yaw_cam": 0.0005,
         "cam_offset": [-33, 0, 26],
         "CAM_GPS_COM": true,
         "cam_gps_err_kp": [[5, 0, 0], [0, 0.5, 0], [0, 0, 5]],
         "USE_REALSENSE": true,
-        "USE_CAMERA": true
+        "USE_CAMERA": true,
+        "RSENSE_GPS_COM": true
     },
     "Simulation": {
-        "GPS_offset": [0, 1, 0],
-        "cam_lose_cnt": 800
+        "GPS_offset": [1, 1, 0],
+        "cam_lose_cnt": 1200
     }
 }

@@ -34,6 +34,9 @@ class Utils(object):
         self.USE_REALSENSE = params["USE_REALSENSE"]
         self.USE_CAMERA = params["USE_CAMERA"]
         self.ref_vel_cam_body = np.array([0, 0, 0])
+        self.rsense_gps2_err = 0
+        self.rsense_gps2_err_kp = 0.5
+        self.RSENSE_GPS_COM = params["RSENSE_GPS_COM"]
 
     def sat(self, a, maxv):
         n = np.linalg.norm(a)
@@ -64,7 +67,7 @@ class Utils(object):
         track_quality = pos_i[4] # pos_i[4] is quality, range from 0 to 1
         print("track_quality: {}".format(track_quality))
         # lowpass filter
-        if self.track_quality_k > 0.75:
+        if track_quality > 0.75:
             track_quality = 1.0
         elif track_quality < 0.2:
             track_quality = 0
@@ -86,6 +89,10 @@ class Utils(object):
             dlt_mav_car_gps_body[2] = dlt_mav_car_gps_body[2] - self.cam_gps_err_body[2]
             print("dlt_mav_car_gps_body: {}".format(dlt_mav_car_gps_body))
             dlt_mav_car_gps_enu = pos_info["mav_R"].dot(dlt_mav_car_gps_body)
+        if self.RSENSE_GPS_COM:
+            dlt_mav_car_gps_body = pos_info["mav_R"].T.dot(dlt_mav_car_gps_enu)
+            dlt_mav_car_gps_body[1] = dlt_mav_car_gps_body[1] - self.rsense_gps2_err
+            dlt_mav_car_gps_enu = pos_info["mav_R"].dot(dlt_mav_car_gps_body)
         # IS use a slide window to smooth the position measurement.
         if self.GPS_SLIDING:
             self.rpos_est_k = self.rpos_est_k + self.we_gps.dot(dlt_mav_car_gps_enu - self.rpos_est_k)
@@ -99,10 +106,13 @@ class Utils(object):
             # body: right-front-up3rpos_est_body)
             rpos_est_body = pos_info["mav_R"].T.dot(self.rpos_est_k)
             print("rpos_est_body_raw: {}".format(rpos_est_body))
-            rpos_est_body[1] = rpos_est_body[1] + self.track_quality_k*(self.we_realsense*(depth - rpos_est_body[1] + self.wedt_realsense*(depth - rpos_est_body[1]*dt)))
+            rpos_est_body[1] = rpos_est_body[1] + self.track_quality_k*self.we_realsense*(depth - rpos_est_body[1])
             self.rpos_est_k = pos_info["mav_R"].dot(rpos_est_body)
-            print("rpos_est_using_realsense: {}".format(self.rpos_est_k))
-        
+
+            self.rsense_gps2_err = self.rsense_gps2_err + self.rsense_gps2_err_kp*(rpos_est_body[1] - depth)
+            print("rsense_gps2_err_body: {}".format(self.rsense_gps2_err))
+            
+        print("rpos_est: {}".format(self.rpos_est_k))
         # obstacle avoidance component
         rpos_est_body = pos_info["mav_R"].T.dot(self.rpos_est_k)
         avo = Avoidance(3*car_velocity)
@@ -110,8 +120,7 @@ class Utils(object):
         print("avoidance: {}".format(avo_cmd))
 
         # calc position error betweent mav and virtual point
-        dlt_pos_est = self.rpos_est_k + pos_info["virtual_car_pos"]
-        dlt_pos = np.array([dlt_pos_est[0], dlt_pos_est[1], pos_info["FLIGHT_H"]-(pos_info["mav_pos"][2]-pos_info["mav_home_pos"][2])])
+        dlt_pos = self.rpos_est_k + pos_info["virtual_car_pos"]
         print("dlt_pos: {}".format(dlt_pos))
         self.integral = self.integral + self.Ki.dot(dlt_pos)*dt
         # integral saturation

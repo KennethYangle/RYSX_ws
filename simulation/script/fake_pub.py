@@ -65,9 +65,9 @@ def talker():
     while not rospy.is_shutdown():
         if cnt < 500:
             car_vel.twist.linear.x = 0
-        elif cnt < 4000:
+        elif cnt < 6000:
             car_vel.twist.linear.x = 1
-        elif cnt < 4200:
+        elif cnt < 6200:
             car_vel.twist.linear.x = 0
             car_yaw = -2*np.pi/3
         else:
