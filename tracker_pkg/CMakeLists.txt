@@ -124,6 +124,9 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+
+
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -135,6 +138,9 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/tracker_pkg.cpp
 # )
+
+#add_library(YEAD ./YEAD/common.cpp ./YEAD/common.h ./YEAD/EllipseDetectorYaed.cpp ./YEAD/EllipseDetectorYaed.h)
+#link_libraries(YEAD)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -148,6 +154,8 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 add_executable(listener_node src/listener.cpp)
 add_executable(commander_node src/commander.cpp)
 add_executable(point_node src/point.cpp)
+add_executable(colortrack_node src/color_track.cpp)
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -166,6 +174,8 @@ add_executable(point_node src/point.cpp)
 target_link_libraries(listener_node ${catkin_LIBRARIES})
 target_link_libraries(commander_node ${catkin_LIBRARIES})
 target_link_libraries(point_node ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(colortrack_node ${catkin_LIBRARIES} ${OpenCV_LIBS})
+
 
 #############
 ## Install ##
