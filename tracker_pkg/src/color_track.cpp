@@ -53,7 +53,7 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 
 	HoughCircles(imgThresholded, circles, CV_HOUGH_GRADIENT, 
 					3, //累加器分辨率
-					5, //两园间最小距离
+					20, //两园间最小距离
 					160, // canny高阈值
 					80, //最小通过数
 					30, 300 );  //最小和最大半径
@@ -76,53 +76,51 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	}
 	if(circles.size()>0)
 	{
-		
+		confidence = 1;
 		centexy.x = centexy.x/circles.size();
 		centexy.y = centexy.y/circles.size();
-		sigmax = 0;
-		sigmay = 0; 
-		for (size_t i = 0; i < circles.size(); i++)
-		{
-			sigmax += (round(circles[i][0])-centexy.x)*(round(circles[i][0])-centexy.x);
-			sigmay += (round(circles[i][1])-centexy.y)*(round(circles[i][1])-centexy.y);
-		}
-		sigmax = sqrt(sigmax)/circles.size();
-		sigmay = sqrt(sigmay)/circles.size();
+		// sigmax = 0;
+		// sigmay = 0; 
+		// for (size_t i = 0; i < circles.size(); i++)
+		// {
+		// 	sigmax += (round(circles[i][0])-centexy.x)*(round(circles[i][0])-centexy.x);
+		// 	sigmay += (round(circles[i][1])-centexy.y)*(round(circles[i][1])-centexy.y);
+		// }
+		// sigmax = sqrt(sigmax)/circles.size();
+		// sigmay = sqrt(sigmay)/circles.size();
 
-		Point finalcenter(0,0);
-		int finalcnt = 0;
-		for (size_t i = 0; i < circles.size(); i++)
-		{
-			if(abs(round(circles[i][0])-centexy.x)<3.4*sigmax && abs(round(circles[i][1])-centexy.y)<3.4*sigmay)
-			{
-				finalcenter.x += round(circles[i][0]);
-				finalcenter.y += round(circles[i][1]);
-				finalcnt++;
-			}
-		}
-		cout<<"------->finalcnt :"<<finalcnt<<endl;
-		if(finalcnt>0)
-		{
-			finalcenter.x = finalcenter.x/finalcnt;
-			finalcenter.y = finalcenter.y/finalcnt;
-			confidence = 1;
-		}
-		else{
-			confidence = -1;
-		}
+		// Point finalcenter(0,0);
+		// int finalcnt = 0;
+		// for (size_t i = 0; i < circles.size(); i++)
+		// {
+		// 	if(abs(round(circles[i][0])-centexy.x)<3.4*sigmax && abs(round(circles[i][1])-centexy.y)<3.4*sigmay)
+		// 	{
+		// 		finalcenter.x += round(circles[i][0]);
+		// 		finalcenter.y += round(circles[i][1]);
+		// 		finalcnt++;
+		// 	}
+		// }
+		// cout<<"------->finalcnt :"<<finalcnt<<endl;
+		// if(finalcnt>0)
+		// {
+		// 	finalcenter.x = finalcenter.x/finalcnt;
+		// 	finalcenter.y = finalcenter.y/finalcnt;
+		// 	confidence = 1;
+		// }
+		// else{
+		// 	confidence = -1;
+		// }
 		
 
-		circle(frame, finalcenter, 3, Scalar(0, 0, 255), -1, 4, 0);
+		circle(frame, centexy, 3, Scalar(0, 0, 255), -1, 4, 0);
+	}
+	else
+	{
+		confidence = -1;
 	}
 	
-	
 	imshow("circle", frame);
-	waitKey(30);
-	
-
-
-	
-	
+	waitKey(1);
 	return centexy;
 }
 
@@ -139,7 +137,7 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 	msg.data.push_back(colorBlock3.y);   // y
 	msg.data.push_back(confidence);   // bbox_w
 	msg.data.push_back(confidence);   // bbox_h
-	msg.data.push_back((sigmax+sigmay)/2);   // confidence
+	msg.data.push_back(1);   // confidence
 	centerPointPub.publish(msg);
 	
 	
@@ -167,16 +165,16 @@ int main(int argc, char** argv)
 
     //发布中心坐标
     
-    centerPointPub = nh.advertise<std_msgs::Float32MultiArray>("color_tracker_point",10);
+    centerPointPub = nh.advertise<std_msgs::Float32MultiArray>("tracker/pos_image",1);
 
 	//订阅图像
-	ros::Subscriber sub = nh.subscribe("/camera/color/image_raw", 10, &imageCallback);
+	ros::Subscriber sub = nh.subscribe("/camera/color/image_raw", 1, &imageCallback);
 
 	
 	ros::spin();
 
 
-	ros::Rate loop_rate(1000);
+	// ros::Rate loop_rate(1000);
 	
 	// while(1)
 	// 	{
@@ -193,9 +191,10 @@ int main(int argc, char** argv)
 	// 		int height = imgOriginal.rows;
 
 
-			
+	// 		colorBlock3 = frameToCoordinate(3, imgOriginal, 170, 0, 0, 180, 255, 255);
+	
 
-	// 		auto k = waitKey(30) & 0xff;
+	// 		auto k = waitKey(10) & 0xff;
 	// 		if(k == 27)
 	// 		{
 	// 			break;
