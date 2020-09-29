@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find tracker_pkg)/launch/rs_aligned_depth.launch" />
+    <node name="hsv_node" pkg="tracker_pkg" type="get_hsv.py" output="screen" />
+</launch>

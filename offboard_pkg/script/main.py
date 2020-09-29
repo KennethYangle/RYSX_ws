@@ -329,10 +329,11 @@ if __name__=="__main__":
         dlt_mav_car_gps_enu_origin = -mav_local + dif_car_mav_pos + car_local
         dlt_mav_car_gps_enu = np.array(car_pos) - np.array(mav_pos) - original_offset
         dlt_mav_car_gps_enu[2] = FLIGHT_H-(mav_pos[2]-mav_home_pos[2])
-        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
-               dlt_home_yaw,     car_yaw_cor,     mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
-
         dlt_vel = np.array(car_vel) - np.array(mav_vel)
+        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nrel_vel: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
+               dlt_home_yaw,     car_yaw_cor,     mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, dlt_vel, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
+
+        
         dlt_yaw = minAngleDiff(car_yaw_cor, mav_yaw)
         keys = [ch5, ch6, ch7, ch8]
         pos_info = {"mav_pos": mav_pos, "mav_vel": mav_vel, "mav_yaw": mav_yaw, "mav_R": mav_R, "mav_home_pos": mav_home_pos, 
