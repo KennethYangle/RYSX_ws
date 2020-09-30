@@ -54,9 +54,10 @@ void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
         depth_ptr = cv_bridge::toCvCopy(depth_msg, sensor_msgs::image_encodings::TYPE_32FC1);
         double minval, maxval;
         cv::minMaxIdx(depth_ptr -> image, &minval, &maxval);
-        cv::Mat adjMap, hotMap;
+        cv::Mat adjMapOri, adjMap, hotMap;
         //expand your range to 0 and 255
-        depth_ptr -> image.convertTo(adjMap, CV_8UC1, 255/(maxval-minval), -minval);
+        depth_ptr -> image.convertTo(adjMapOri, CV_8UC1, 255/(maxval-minval), -minval);
+        flip(adjMapOri, adjMap, -1);
         applyColorMap(adjMap, hotMap, COLORMAP_HOT);
         // Rectangle: img, left-top, right-bottom, color, line-width, line-type, point-type 
         cv::rectangle(hotMap, center_point-center_offset, center_point+center_offset, Scalar(255,0,0),3,8,0);

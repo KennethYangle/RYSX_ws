@@ -16,7 +16,8 @@ using namespace std;
 
 int color_count; 
 static int radius_path = 40;
-int confidence = 0;
+float bbox = 0;
+float confidence = 0;
 Point2d trackPoint;
 int test = 10;
 float sigmax;
@@ -76,6 +77,7 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	}
 	if(circles.size()>0)
 	{
+		bbox = 1;
 		confidence = 1;
 		centexy.x = centexy.x/circles.size();
 		centexy.y = centexy.y/circles.size();
@@ -116,7 +118,8 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	}
 	else
 	{
-		confidence = -1;
+		bbox = 0;
+		confidence = 0;
 	}
 	
 	imshow("circle", frame);
@@ -129,16 +132,19 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 	//red
 	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(imgae_msg, sensor_msgs::image_encodings::BGR8);
 	Mat imgOriginal = cv_ptr -> image;
+	Mat imgCor;
+	flip(imgOriginal, imgCor, -1);
 
-	colorBlock3 = frameToCoordinate(3, imgOriginal, 170, 0, 0, 180, 255, 255);
+	colorBlock3 = frameToCoordinate(3, imgCor, 170, 200, 60, 180, 255, 180);
 	
 	std_msgs::Float32MultiArray msg;
 	msg.data.push_back(colorBlock3.x);   // x
 	msg.data.push_back(colorBlock3.y);   // y
-	msg.data.push_back(confidence);   // bbox_w
-	msg.data.push_back(confidence);   // bbox_h
-	msg.data.push_back(1);   // confidence
+	msg.data.push_back(bbox);   // bbox_w
+	msg.data.push_back(bbox);   // bbox_h
+	msg.data.push_back(confidence);   // confidence
 	centerPointPub.publish(msg);
+	cout << "centerxy: " << colorBlock3 << endl;
 	
 	
 }
