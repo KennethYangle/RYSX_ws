@@ -216,8 +216,8 @@ if __name__=="__main__":
     local_vel_pub = rospy.Publisher('mavros/setpoint_velocity/cmd_vel', TwistStamped, queue_size=10)
     print("Publisher and Subscriber Created")
 
-    rospy.wait_for_service("tracker/save_img")
-    save_client = rospy.ServiceProxy("tracker/save_img", Empty)
+    # rospy.wait_for_service("tracker/save_img")
+    # save_client = rospy.ServiceProxy("tracker/save_img", Empty)
     rospy.wait_for_service("mavros/cmd/arming")
     arming_client = rospy.ServiceProxy('mavros/cmd/arming', CommandBool)
     rospy.wait_for_service("mavros/set_mode")
@@ -282,11 +282,11 @@ if __name__=="__main__":
             original_offset = np.array(car_pos) - np.array(mav_pos)
             print("GPS calibration.")
 
-        if ch9 == 0 or ch9 == 2:
-            try: 
-                save_client()
-            except rospy.ServiceException, e:
-                print("/tracker/save_img service call failed")
+        # if ch9 == 0 or ch9 == 2:
+        #     try: 
+        #         save_client()
+        #     except rospy.ServiceException, e:
+        #         print("/tracker/save_img service call failed")
         if ch8 == 0:
             if current_state.mode == "OFFBOARD":
                 resp1 = set_mode_client(0, "POSCTL")	# (uint8 base_mode, string custom_mode)

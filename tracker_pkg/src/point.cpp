@@ -69,7 +69,9 @@ void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
             for (int j=center_point.y-center_offset.y; j<=center_point.y+center_offset.y; j++) {
                 // border detection
                 if (i<0 || i>=depth_w || j<0 || j>=depth_h)   continue;
-                float dd = depth_pic.ptr<float>(j)[i];
+                int a = depth_w - i;
+                int b = depth_h - j;
+                float dd = depth_pic.ptr<float>(b)[a];
                 if (dd > 10 && dd < 8182) {
                     cnt++;
                     // cout << j << ", " << i << ": " << dd << endl;

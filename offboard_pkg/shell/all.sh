@@ -12,7 +12,7 @@ sleep 2s
 rosservice call /mavros_ruying/cmd/command '{broadcast: false, command: 511, confirmation: 0, param1: 31, param2: 5000, param3: 0.0, param4: 0.0, param5: 0.0, param6: 0.0, param7: 0.0}' &
 sleep 2s
 rosservice call /mavros_ruying/cmd/command '{broadcast: false, command: 511, confirmation: 0, param1: 32, param2: 5000, param3: 0.0, param4: 0.0, param5: 0.0, param6: 0.0, param7: 0.0}' &
-sleep 2s
+sleep 5s
 roslaunch offboard_pkg rysx.launch & PID3=$!
 sleep 5s
 
