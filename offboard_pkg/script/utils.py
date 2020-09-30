@@ -32,6 +32,7 @@ class Utils(object):
         self.cam_gps_err_body = np.array([0, 0, 0])
         self.cam_gps_err_up = 0
         self.cam_gps_err_kp = np.array(params["cam_gps_err_kp"])
+        self.USE_GPS = params["USE_GPS"]
         self.USE_REALSENSE = params["USE_REALSENSE"]
         self.USE_CAMERA = params["USE_CAMERA"]
         self.ref_vel_cam_body = np.array([0, 0, 0])
@@ -133,7 +134,8 @@ class Utils(object):
 
         # PID controller
         ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
-        # ref_vel_enu = np.array([0, 0, 0])
+        if not self.USE_GPS:
+            ref_vel_enu = np.array([0, 0, 0])
         print("ref_vel_enu: {}".format(ref_vel_enu))
         
         # camera controller

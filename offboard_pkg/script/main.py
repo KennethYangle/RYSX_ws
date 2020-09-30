@@ -227,7 +227,7 @@ if __name__=="__main__":
     
     # ensure the connection 
     while(not current_state.connected):
-        print(current_state.connected)
+        print("connected: {}".format(current_state.connected))
         rate.sleep()
     
     # set position here. 
