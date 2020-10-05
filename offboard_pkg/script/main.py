@@ -262,6 +262,7 @@ if __name__=="__main__":
     # start
     cnt = -1
     while not rospy.is_shutdown():
+        print("time: {}".format(rospy.Time.now().to_sec() - last_request.to_sec()))
         cnt += 1
         state_name = sm.state_name
         if cnt % 10 == 0:
