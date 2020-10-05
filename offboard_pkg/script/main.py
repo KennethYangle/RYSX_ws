@@ -317,9 +317,9 @@ if __name__=="__main__":
 
         dlt_home_yaw = minAngleDiff(car_home_yaw, mav_home_yaw)
         car_yaw_cor = angleLimiting(car_yaw - dlt_home_yaw)
-        # GPS course
-        if np.linalg.norm([car_vel_k[0], car_vel_k[1]]) > 2:
-            car_yaw_cor = np.arctan2(car_vel_k[1], car_vel_k[0])
+        # # GPS course
+        # if np.linalg.norm([car_vel_k[0], car_vel_k[1]]) > 2:
+        #     car_yaw_cor = np.arctan2(car_vel_k[1], car_vel_k[0])
         mav_local = np.array(mav_pos) - np.array(mav_home_pos)
         dif_car_mav_pos = u.GeoToENU(mav_home_geo, car_home_geo)
         ll = follow_distance if follow_mode == 0 else np.linalg.norm([dif_car_mav_pos[0], dif_car_mav_pos[1]])
@@ -331,9 +331,8 @@ if __name__=="__main__":
         dlt_mav_car_gps_enu = np.array(car_pos) - np.array(mav_pos) - original_offset
         dlt_mav_car_gps_enu[2] = FLIGHT_H-(mav_pos[2]-mav_home_pos[2])
         dlt_vel = np.array(car_vel) - np.array(mav_vel)
-        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nrel_vel: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
-               dlt_home_yaw,     car_yaw_cor,     mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, dlt_vel, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
-
+        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_yaw: {}\nmav_pos: {}\nmav_vel: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nrel_vel: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
+               dlt_home_yaw,     car_yaw_cor,   mav_yaw,     mav_pos, mav_vel, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, dlt_vel, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
         
         dlt_yaw = minAngleDiff(car_yaw_cor, mav_yaw)
         keys = [ch5, ch6, ch7, ch8]
@@ -341,7 +340,6 @@ if __name__=="__main__":
                     "mav_home_yaw": mav_home_yaw, "car_home_pos": car_home_pos, "rel_pos": dlt_pos, "rel_vel": dlt_vel, 
                     "rel_yaw": dlt_yaw, "dlt_mav_car_gps_enu": dlt_mav_car_gps_enu, "virtual_car_pos": virtual_car_pos, 
                     "R_bc": np.array([[1,0,0], [0,0,1], [0,-1,0]]), "FLIGHT_H": FLIGHT_H}
-        print("car_yaw_cor: {}, mav_yaw: {}".format(car_yaw_cor, mav_yaw))
         if pos_i[0] > 0:
             print("pos_i: {}".format(pos_i))
             print("depth: {}".format(depth))

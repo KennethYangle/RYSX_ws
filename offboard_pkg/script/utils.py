@@ -133,7 +133,11 @@ class Utils(object):
         self.SatIntegral(self.integral, 0.5, -0.5)
 
         # PID controller
-        ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
+        P_component = self.Kp.dot(dlt_pos)
+        I_component = self.integral
+        D_component = self.D*np.array(pos_info["rel_vel"])
+        ref_vel_enu = P_component + I_component + D_component
+        print("P_component: {}\nI_component: {}\nD_component: {}".format(P_component, I_component, D_component))
         if not self.USE_GPS:
             ref_vel_enu = np.array([0, 0, 0])
         print("ref_vel_enu: {}".format(ref_vel_enu))
@@ -141,6 +145,7 @@ class Utils(object):
         # camera controller
         if not self.USE_CAMERA:
             cam_is_ok = False
+            self.track_quality_k = 0
         if cam_is_ok:
             self.integral =np.array([0, 0, 0])
             i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
