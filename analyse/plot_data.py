@@ -11,10 +11,14 @@ def main(args):
     nvar = len(args.variable)
     raw_datas = [[] for v in range(nvar)]
     cnt = 0
+    time = 0
     index = [[] for v in range(nvar)]
     data_len = [0 for v in range(nvar)]
     for line in lines:
         for v in range(nvar):
+            if line.startswith("time:"):
+                tmp = [float(a) for a in re.findall(r'-?\d+\.?\d*e?[-+]?\d*', line)]
+                time = tmp[0]
             if line.startswith(args.variable[v]+":"):
                 tmp = [float(a) for a in re.findall(r'-?\d+\.?\d*e?[-+]?\d*', line)]
                 # print(tmp)
@@ -22,7 +26,7 @@ def main(args):
                     data_len[v] = len(tmp)
                 if data_len[v]!=0 and len(tmp) == data_len[v]:
                     raw_datas[v].append(tmp)
-                    index[v].append(cnt)
+                    index[v].append(time)
         cnt += 1
     print(data_len)
     # print(raw_datas)
