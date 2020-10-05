@@ -223,7 +223,7 @@ if __name__=="__main__":
     rospy.wait_for_service("mavros/set_mode")
     set_mode_client = rospy.ServiceProxy('mavros/set_mode', SetMode)
     print("Clients Created")
-    rate = rospy.Rate(20)
+    rate = rospy.Rate(50)
     
     # ensure the connection 
     while(not current_state.connected):
@@ -274,9 +274,9 @@ if __name__=="__main__":
             if cnt % 100 == 0:
                 print("is_initialize all True")
         
-        if ch14 == 0:
-            sm.reset()
-            print("All states have been reset.")
+        # if ch14 == 0:
+        #     sm.reset()
+        #     print("All states have been reset.")
 
         if ch11 == 0:
             original_offset = np.array(car_pos) - np.array(mav_pos)
