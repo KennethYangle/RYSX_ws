@@ -40,6 +40,10 @@ class Utils(object):
         self.rsense_gps2_err_kp = 0.5
         self.RSENSE_GPS_COM = params["RSENSE_GPS_COM"]
 
+        self.Kp_lr_cam = 1
+        self.Kp_lr_cam = 1
+
+
     def sat(self, a, maxv):
         n = np.linalg.norm(a)
         if n > maxv:
@@ -82,6 +86,12 @@ class Utils(object):
         # When RealSense is available, the return depth is greater than 0.
         if depth > 0:
             realsense_is_ok = True
+
+        depth_delta = 0
+        if depth_left > 0 and depth_right > 0:
+            #if depth_delta >0  roll to right
+            depth_delta = depth_right - depth_left
+
         
         
         # Is use cam compensate GPS.
