@@ -125,7 +125,7 @@ void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
             depth_left.pose.position.x = depth_left.pose.position.y = depth_left.pose.position.z = -1;
         }
         else {
-            depth_left.pose.position.x = depth_left.pose.position.y = depth_left.pose.position.z = depth_sum_left/1000.0/cnt;
+            depth_left.pose.position.x = depth_left.pose.position.y = depth_left.pose.position.z = depth_sum_left/1000.0/cnt_left;
         }
 
 
@@ -149,7 +149,7 @@ void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
             depth_right.pose.position.x = depth_right.pose.position.y = depth_right.pose.position.z = -1;
         }
         else {
-            depth_right.pose.position.x = depth_right.pose.position.y = depth_right.pose.position.z = depth_sum_right/1000.0/cnt;
+            depth_right.pose.position.x = depth_right.pose.position.y = depth_right.pose.position.z = depth_sum_right/1000.0/cnt_right;
         }
 
 

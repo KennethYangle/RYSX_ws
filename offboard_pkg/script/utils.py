@@ -52,7 +52,7 @@ class Utils(object):
         cmd_yawrate = self.sat(self.P*(pos_info["mav_home_yaw"]-pos_info["mav_yaw"]), 2)
         return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
 
-    def DockingControllerFusion(self, pos_info, pos_i, depth, car_velocity):
+    def DockingControllerFusion(self, pos_info, pos_i, depth, depth_left, depth_right, car_velocity):
         # GPS+IMU failed
         if pos_info["mav_pos"] == 0:
             return [0,0,0,0]

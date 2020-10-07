@@ -216,7 +216,7 @@ class StateMachine(object):
         self.state = state
         self.state_name = state.state_name
 
-    def update(self, keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity):
+    def update(self, keys, is_initialize_finish, pos_info, pos_i, depth, depth_left, depth_right, car_velocity):
         """
         - keys: 按键状态
         - is_initialize_finish: externally subscribed

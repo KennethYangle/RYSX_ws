@@ -45,6 +45,8 @@ maxQ = 100
 sumQ = 0.0
 home_dx, home_dy = 0, 0
 depth = -1
+depth_left = -1
+depth_right = -1
 original_offset = np.array([0, 0, 0])
 
 def spin():
@@ -162,6 +164,15 @@ def depth_cb(msg):
     global depth
     depth = msg.pose.position.x
 
+def depth_left_cb(msg):
+    global depth_left
+    depth_left = msg.pose.position.x
+
+def depth_right_cb(msg):
+    global depth_right
+    depth_right = msg.pose.position.x
+
+
 def minAngleDiff(a, b):
     diff = a - b
     if diff < 0:
@@ -212,6 +223,10 @@ if __name__=="__main__":
     rospy.Subscriber("mavros/home_position/home", HomePosition, mav_home_cb)
     rospy.Subscriber("mavros_ruying/home_position/home", HomePosition, car_home_cb)
     rospy.Subscriber("tracker/depth", PoseStamped, depth_cb)
+
+    rospy.Subscriber("tracker/depth_left", PoseStamped, depth_left_cb)
+    rospy.Subscriber("tracker/depth_right", PoseStamped, depth_right_cb)
+
     local_pos_pub = rospy.Publisher('mavros/setpoint_position/local', PoseStamped, queue_size=10)
     local_vel_pub = rospy.Publisher('mavros/setpoint_velocity/cmd_vel', TwistStamped, queue_size=10)
     print("Publisher and Subscriber Created")
@@ -346,7 +361,7 @@ if __name__=="__main__":
             print("pos_i: {}".format(pos_i))
             print("depth: {}".format(depth))
 
-        cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity)
+        cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, depth_left, depth_right, car_velocity)
         # cmd = sm.update(keys, is_initialize_finish, pos_info, [0,0,0,0,0], depth, car_velocity)
         print("cmd: {}".format(cmd))
         if cmd is not None:
