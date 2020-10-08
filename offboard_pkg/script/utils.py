@@ -189,7 +189,8 @@ class Utils(object):
             # ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * ref_vel_cam_enu
             ref_vel_body = pos_info["mav_R"].T.dot(ref_vel_enu)
             print("ref_vel_body_gps: {}".format(ref_vel_body))
-            ref_vel_body[0] = (1 - self.track_quality_k) * ref_vel_body[0] + self.track_quality_k * self.ref_vel_cam_body[0]
+            # ref_vel_body[0] = (1 - self.track_quality_k) * ref_vel_body[0] + self.track_quality_k * self.ref_vel_cam_body[0]
+            ref_vel_body[0] = ref_vel_body[0]
             ref_vel_body[2] = (1 - self.track_quality_k) * ref_vel_body[2] + self.track_quality_k * self.ref_vel_cam_body[2]
             print("ref_vel_body_cam: {}".format(ref_vel_body))
             ref_vel_enu = pos_info["mav_R"].dot(ref_vel_body)
