@@ -41,6 +41,10 @@ class Utils(object):
         self.RSENSE_GPS_COM = params["RSENSE_GPS_COM"]
         self.I_saturation_limit = params["I_saturation_limit"]
 
+        self.Kp_lr_cam = 1
+        self.Kp_lr_cam = 1
+
+
     def sat(self, a, maxv):
         n = np.linalg.norm(a)
         if n > maxv:
@@ -53,7 +57,7 @@ class Utils(object):
         cmd_yawrate = self.sat(self.P*(pos_info["mav_home_yaw"]-pos_info["mav_yaw"]), 2)
         return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
 
-    def DockingControllerFusion(self, pos_info, pos_i, depth, car_velocity):
+    def DockingControllerFusion(self, pos_info, pos_i, depth, depth_left, depth_right, car_velocity):
         # GPS+IMU failed
         if pos_info["mav_pos"] == 0:
             return [0,0,0,0]
@@ -83,6 +87,12 @@ class Utils(object):
         # When RealSense is available, the return depth is greater than 0.
         if depth > 0:
             realsense_is_ok = True
+
+        depth_delta = 0
+        if depth_left > 0 and depth_right > 0:
+            #if depth_delta >0  roll to right
+            depth_delta = depth_right - depth_left
+
         
         
         # Is use cam compensate GPS.

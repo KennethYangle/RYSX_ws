@@ -23,6 +23,7 @@ int test = 10;
 float sigmax;
 float sigmay;
 Point2d colorBlock3;
+float average_radius = 0;
 
 ros::Publisher centerPointPub;
 
@@ -62,6 +63,7 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	cout<<"------->circles.size() :"<<circles.size()<<endl;
 
 	Point centexy(0,0);
+	average_radius = 0;
 	
 	for (size_t i = 0; i < circles.size(); i++)
 	{
@@ -73,6 +75,7 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 		// circle(frame, center, radius, Scalar(0, 255, 0), 3, 4, 0);
 		centexy.x += center.x;
 		centexy.y += center.y;
+		average_radius += radius;
 
 	}
 	if(circles.size()>0)
@@ -81,6 +84,7 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 		confidence = 1;
 		centexy.x = centexy.x/circles.size();
 		centexy.y = centexy.y/circles.size();
+		average_radius = average_radius/circles.size();
 		// sigmax = 0;
 		// sigmay = 0; 
 		// for (size_t i = 0; i < circles.size(); i++)
@@ -119,6 +123,7 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	else
 	{
 		bbox = 0;
+		average_radius = 0;
 		confidence = 0;
 	}
 	
@@ -140,8 +145,8 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 	std_msgs::Float32MultiArray msg;
 	msg.data.push_back(colorBlock3.x);   // x
 	msg.data.push_back(colorBlock3.y);   // y
-	msg.data.push_back(bbox);   // bbox_w
-	msg.data.push_back(bbox);   // bbox_h
+	msg.data.push_back(average_radius);   // bbox_w
+	msg.data.push_back(average_radius);   // bbox_h
 	msg.data.push_back(confidence);   // confidence
 	centerPointPub.publish(msg);
 	cout << "centerxy: " << colorBlock3 << endl;
