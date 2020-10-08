@@ -40,9 +40,7 @@ car_home_geo = [0, 0, 0]
 pos_i = [0, 0, 0, 0, 0]
 state_name = "InitializeState"
 command = TwistStamped()
-q = Queue()
-maxQ = 100
-sumQ = 0.0
+alpha = 0.1
 home_dx, home_dy = 0, 0
 depth = -1
 original_offset = np.array([0, 0, 0])
@@ -77,16 +75,7 @@ def car_pose_cb(msg):
     car_pos = [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]
     q0, q1, q2, q3 = msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z
     yaw = math.atan2(2*(q0*q3+q1*q2), 1-2*(q2*q2+q3*q3))
-    if q.qsize() < maxQ:
-        sumQ += yaw
-        q.put(yaw)
-        car_yaw = sumQ / q.qsize()
-    else:
-        sumQ += yaw
-        q.put(yaw)
-        first_yaw = q.get()
-        sumQ -= first_yaw
-        car_yaw = sumQ / maxQ
+    car_yaw = alpha * yaw + (1 - alpha) * car_yaw
     # car_yaw = yaw
 
 def car_vel_cb(msg):
@@ -331,13 +320,13 @@ if __name__=="__main__":
         dlt_mav_car_gps_enu = np.array(car_pos) - np.array(mav_pos) - original_offset
         dlt_mav_car_gps_enu[2] = FLIGHT_H-(mav_pos[2]-mav_home_pos[2])
         dlt_vel = np.array(car_vel) - np.array(mav_vel)
-        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_yaw: {}\nmav_pos: {}\nmav_vel: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nrel_vel: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
-               dlt_home_yaw,     car_yaw_cor,   mav_yaw,     mav_pos, mav_vel, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, dlt_vel, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
+        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_yaw: {}\nmav_pos: {}\nmav_vel: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nrel_vel: {}\nll: {}\ncar_pos: {}\ncar_vel: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
+               dlt_home_yaw,     car_yaw_cor,   mav_yaw,     mav_pos, mav_vel, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, dlt_vel, ll, car_pos, car_vel, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
         
         dlt_yaw = minAngleDiff(car_yaw_cor, mav_yaw)
         keys = [ch5, ch6, ch7, ch8]
         pos_info = {"mav_pos": mav_pos, "mav_vel": mav_vel, "mav_yaw": mav_yaw, "mav_R": mav_R, "mav_home_pos": mav_home_pos, 
-                    "mav_home_yaw": mav_home_yaw, "car_home_pos": car_home_pos, "rel_pos": dlt_pos, "rel_vel": dlt_vel, 
+                    "mav_home_yaw": mav_home_yaw, "car_home_pos": car_home_pos, "car_vel": car_vel, "rel_pos": dlt_pos, "rel_vel": dlt_vel, 
                     "rel_yaw": dlt_yaw, "dlt_mav_car_gps_enu": dlt_mav_car_gps_enu, "virtual_car_pos": virtual_car_pos, 
                     "R_bc": np.array([[1,0,0], [0,0,1], [0,-1,0]]), "FLIGHT_H": FLIGHT_H}
         if pos_i[0] > 0:

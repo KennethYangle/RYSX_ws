@@ -39,6 +39,7 @@ class Utils(object):
         self.rsense_gps2_err = 0
         self.rsense_gps2_err_kp = 0.5
         self.RSENSE_GPS_COM = params["RSENSE_GPS_COM"]
+        self.I_saturation_limit = params["I_saturation_limit"]
 
     def sat(self, a, maxv):
         n = np.linalg.norm(a)
@@ -128,16 +129,18 @@ class Utils(object):
         dlt_pos = self.rpos_est_k + pos_info["virtual_car_pos"]
         print("dlt_pos: {}".format(dlt_pos))
         
-        self.integral = self.integral + self.Ki.dot(dlt_pos)*dt
+        if np.linalg.norm(pos_info["car_vel"]) > 2:
+            self.integral = self.integral + self.Ki.dot(dlt_pos)*dt
         # integral saturation
-        self.SatIntegral(self.integral, 0.5, -0.5)
+        self.SatIntegral(self.integral, self.I_saturation_limit, -self.I_saturation_limit)
 
         # PID controller
         P_component = self.Kp.dot(dlt_pos)
         I_component = self.integral
         D_component = self.D*np.array(pos_info["rel_vel"])
-        ref_vel_enu = P_component + I_component + D_component
-        print("P_component: {}\nI_component: {}\nD_component: {}".format(P_component, I_component, D_component))
+        F_component = pos_info["car_vel"]
+        ref_vel_enu = P_component + I_component + D_component + F_component
+        print("P_component: {}\nI_component: {}\nD_component: {}\nF_component: {}".format(P_component, I_component, D_component, F_component))
         if not self.USE_GPS:
             ref_vel_enu = np.array([0, 0, 0])
         print("ref_vel_enu: {}".format(ref_vel_enu))
