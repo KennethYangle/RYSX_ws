@@ -13,6 +13,7 @@ class Utils(object):
         self.Eb = params["Eb"]
         self.saftyz = params["saftyz"]
         self.USE_CAM_FOR_X = params["USE_CAM_FOR_X"]
+        self.USE_DEPTH_FOR_X = params["USE_DEPTH_FOR_X"]
         self.GPS_SLIDING = params["GPS_SLIDING"]
         self.we_gps = np.array(params["we_gps"])
         self.we_realsense = params["we_realsense"]
@@ -40,9 +41,7 @@ class Utils(object):
         self.rsense_gps2_err_kp = 0.5
         self.RSENSE_GPS_COM = params["RSENSE_GPS_COM"]
         self.I_saturation_limit = params["I_saturation_limit"]
-
-        self.Kp_lr_cam = 1
-        self.Ki_lr_cam = 1
+        self.Kp_lr_depth = params["Kp_lr_depth"]
 
 
     def sat(self, a, maxv):
@@ -88,12 +87,12 @@ class Utils(object):
         if depth > 0:
             realsense_is_ok = True
 
+        # difference between left depth with right depth
         depth_delta = 0
         if depth_left > 0 and depth_right > 0:
             #if depth_delta >0  roll to right
             depth_delta = depth_right - depth_left
-
-        
+        print("depth_delta: {}".format(depth_delta))
         
         # Is use cam compensate GPS.
         if self.CAM_GPS_COM:
@@ -180,6 +179,8 @@ class Utils(object):
             # Is use camera information to control the body's lateral speed.
             if not self.USE_CAM_FOR_X:
                 self.ref_vel_cam_body[0] = 0
+            if self.USE_DEPTH_FOR_X:
+                self.ref_vel_cam_body[0] = self.Kp_lr_depth * depth_delta
             self.ref_vel_cam_body[1] = 0
             print("ref_vel_cam_body: {}".format(self.ref_vel_cam_body))
             # ref_vel_cam_enu = pos_info["mav_R"].dot(ref_vel_cam_body + self.cam_offset)

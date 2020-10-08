@@ -140,7 +140,7 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 	Mat imgCor;
 	flip(imgOriginal, imgCor, -1);
 
-	colorBlock3 = frameToCoordinate(3, imgCor, 170, 150, 60, 180, 255, 255);
+	colorBlock3 = frameToCoordinate(3, imgCor, 170, 150, 60, 181, 256, 256);
 	
 	std_msgs::Float32MultiArray msg;
 	msg.data.push_back(colorBlock3.x);   // x
