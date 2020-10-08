@@ -180,7 +180,7 @@ class Utils(object):
             if not self.USE_CAM_FOR_X:
                 self.ref_vel_cam_body[0] = 0
             if self.USE_DEPTH_FOR_X:
-                self.ref_vel_cam_body[0] = self.Kp_lr_depth * depth_delta
+                self.ref_vel_cam_body[0] = self.sat(self.Kp_lr_depth * depth_delta, 0.5)
             self.ref_vel_cam_body[1] = 0
             print("ref_vel_cam_body: {}".format(self.ref_vel_cam_body))
             # ref_vel_cam_enu = pos_info["mav_R"].dot(ref_vel_cam_body + self.cam_offset)

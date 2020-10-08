@@ -17,7 +17,6 @@ float pos_i[5]; // i_x, i_y, bbox_w, bbox_h, confidence
 cv_bridge::CvImagePtr depth_ptr;
 cv::Mat depth_pic;
 cv::Point2i center_point(0, 0);
-
 cv::Point2i left_point(0, 0);
 cv::Point2i right_point(0, 0);
 
@@ -27,7 +26,6 @@ ros::Publisher pub_left;
 ros::Publisher pub_right;
 
 geometry_msgs::PoseStamped depth;
-
 geometry_msgs::PoseStamped depth_left;
 geometry_msgs::PoseStamped depth_right;
 
@@ -37,18 +35,6 @@ cv::Point2i center_offset(10, 10);
 
 void pos_image_cb(const std_msgs::Float32MultiArray &input)
 {
-    // if (input.data[0] <= 0) {
-    //     center_point.x = center_point.y = 0;
-    // }
-    // else {
-    //     std::vector<Point2f> points_projection;
-    //     points_projection.push_back(cv::Point(input.data[0], input.data[1]));
-    //     std::vector<Point2f> points_back_projection;
-    //     perspectiveTransform(points_projection, points_back_projection, homography_from_file);
-    //     center_point.x = int(points_back_projection[0].x);
-    //     center_point.y = int(points_back_projection[0].y);
-    //     // cout << "nano: " << points_projection[0] << "  --->  " << "D435i: " << center_point << endl;
-    // }
     center_point.x = input.data[0];
     center_point.y = input.data[1];
     left_point.x = center_point.x - (input.data[2]/2);
@@ -70,7 +56,7 @@ void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
         double minval, maxval;
         cv::minMaxIdx(depth_ptr -> image, &minval, &maxval);
         cv::Mat adjMapOri, adjMap, hotMap;
-        //expand your range to 0 and 255
+        // expand your range to 0 and 255
         depth_ptr -> image.convertTo(adjMapOri, CV_8UC1, 255/(maxval-minval), -minval);
         flip(adjMapOri, adjMap, -1);
         applyColorMap(adjMap, hotMap, COLORMAP_HOT);
@@ -152,9 +138,6 @@ void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
             depth_right.pose.position.x = depth_right.pose.position.y = depth_right.pose.position.z = depth_sum_right/1000.0/cnt_right;
         }
 
-
-        // cout << depth.pose.position.x << endl << endl << endl;
-
         putText(hotMap, "depth: "+std::to_string(depth.pose.position.x), Point(100,100),
                 FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255,0,0), 2, CV_AA);
         putText(hotMap, "depth_left: "+std::to_string(depth_left.pose.position.x), Point(100,200),
@@ -187,11 +170,6 @@ int main(int argc, char **argv)
     pub = nh.advertise<geometry_msgs::PoseStamped>("tracker/depth", 1);
     pub_left = nh.advertise<geometry_msgs::PoseStamped>("tracker/depth_left", 1);
     pub_right = nh.advertise<geometry_msgs::PoseStamped>("tracker/depth_right", 1);
-
-    // FileStorage fs1("/home/t/RYSX_ws/src/zero_opencv0/homography.xml", FileStorage::READ);
-    // fs1["homography"] >> homography_from_file;
-    // cout << homography_from_file << endl;
-    // fs1.release();
 
     ros::spin();
     return 0;

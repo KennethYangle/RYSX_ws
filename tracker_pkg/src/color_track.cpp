@@ -9,7 +9,6 @@
 #include "sensor_msgs/Image.h"
 #include <cv_bridge/cv_bridge.h>
 
-
 using namespace cv;
 using namespace std;
 
@@ -24,7 +23,6 @@ float sigmax;
 float sigmay;
 Point2d colorBlock3;
 float average_radius = 0;
-
 ros::Publisher centerPointPub;
 
 
@@ -48,7 +46,7 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	//闭操作
 	Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(9, 9));
     morphologyEx(imgThresholded, imgThresholded, MORPH_CLOSE, kernel);
-	imshow("red block", imgThresholded);
+	imshowframeToCoordinate"red block", imgThresholded);
 	
 
 	vector<Vec3f> circles;
@@ -85,39 +83,6 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 		centexy.x = centexy.x/circles.size();
 		centexy.y = centexy.y/circles.size();
 		average_radius = average_radius/circles.size();
-		// sigmax = 0;
-		// sigmay = 0; 
-		// for (size_t i = 0; i < circles.size(); i++)
-		// {
-		// 	sigmax += (round(circles[i][0])-centexy.x)*(round(circles[i][0])-centexy.x);
-		// 	sigmay += (round(circles[i][1])-centexy.y)*(round(circles[i][1])-centexy.y);
-		// }
-		// sigmax = sqrt(sigmax)/circles.size();
-		// sigmay = sqrt(sigmay)/circles.size();
-
-		// Point finalcenter(0,0);
-		// int finalcnt = 0;
-		// for (size_t i = 0; i < circles.size(); i++)
-		// {
-		// 	if(abs(round(circles[i][0])-centexy.x)<3.4*sigmax && abs(round(circles[i][1])-centexy.y)<3.4*sigmay)
-		// 	{
-		// 		finalcenter.x += round(circles[i][0]);
-		// 		finalcenter.y += round(circles[i][1]);
-		// 		finalcnt++;
-		// 	}
-		// }
-		// cout<<"------->finalcnt :"<<finalcnt<<endl;
-		// if(finalcnt>0)
-		// {
-		// 	finalcenter.x = finalcenter.x/finalcnt;
-		// 	finalcenter.y = finalcenter.y/finalcnt;
-		// 	confidence = 1;
-		// }
-		// else{
-		// 	confidence = -1;
-		// }
-		
-
 		circle(frame, centexy, 3, Scalar(0, 0, 255), -1, 4, 0);
 	}
 	else
@@ -150,71 +115,18 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 	msg.data.push_back(confidence);   // confidence
 	centerPointPub.publish(msg);
 	cout << "centerxy: " << colorBlock3 << endl;
-	
-	
 }
 
 
 int main(int argc, char** argv)
 {
-    // auto cap = VideoCapture("/home/zhou/Desktop/7.mp4");
-    // if(!cap.isOpened())
-	// {
-		
-	// 	cout<<"no captured...";
-	// 	return 0;
-	// }
-        
-    // namedWindow("Thresholded Image",WINDOW_NORMAL);
-    // resizeWindow("Thresholded Image",1080,960);
 	ros::init(argc,argv,"color_tracker");
     ros::NodeHandle nh;
 	ros::Time::init();
 
-	
-
-
     //发布中心坐标
-    
     centerPointPub = nh.advertise<std_msgs::Float32MultiArray>("tracker/pos_image",1);
-
 	//订阅图像
 	ros::Subscriber sub = nh.subscribe("/camera/color/image_raw", 1, &imageCallback);
-
-	
 	ros::spin();
-
-
-	// ros::Rate loop_rate(1000);
-	
-	// while(1)
-	// 	{
-			
-	// 		Mat imgOriginal ;
-			
-	// 		cap>> imgOriginal;
-	// 		if(imgOriginal.empty())
-	// 		{
-	// 			cout<<"over...";
-	// 			break;
-	// 		}
-	// 		int width = imgOriginal.cols;
-	// 		int height = imgOriginal.rows;
-
-
-	// 		colorBlock3 = frameToCoordinate(3, imgOriginal, 170, 0, 0, 180, 255, 255);
-	
-
-	// 		auto k = waitKey(10) & 0xff;
-	// 		if(k == 27)
-	// 		{
-	// 			break;
-	// 		}
-	// 		ros::spinOnce();
-	// 		loop_rate.sleep();
-	// 	}
-
-	// cap.release();
-	// destroyAllWindows();
-	
 }
