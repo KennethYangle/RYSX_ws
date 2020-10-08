@@ -42,7 +42,7 @@ class Utils(object):
         self.I_saturation_limit = params["I_saturation_limit"]
 
         self.Kp_lr_cam = 1
-        self.Kp_lr_cam = 1
+        self.Ki_lr_cam = 1
 
 
     def sat(self, a, maxv):
