@@ -60,10 +60,8 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	split(imgHSV, hsvSplit);
 	equalizeHist(hsvSplit[2], hsvSplit[2]);
 	merge(hsvSplit, imgHSV);
-	Mat imgThresholded, imgThresholded1, imgThresholded2;
-	inRange(imgHSV, Scalar(lowh, lows, lowv), Scalar(highh, highs, highv), imgThresholded1); //Threshold the image
-	inRange(imgHSV, Scalar(0, lows, lowv), Scalar(0, highs, highv), imgThresholded2); //Threshold the image
-	imgThresholded = imgThresholded1 + imgThresholded2;
+	Mat imgThresholded;
+	inRange(imgHSV, Scalar(lowh, lows, lowv), Scalar(highh, highs, highv), imgThresholded); //Threshold the image
 
 	//开操作 (去除一些噪点)
 	Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
@@ -124,11 +122,14 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 
 void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
 {
+    cout << "depth_Callback begin" << endl;
     depth_ptr = cv_bridge::toCvCopy(depth_msg, sensor_msgs::image_encodings::TYPE_32FC1);
+    cout << "depth_Callback end" << endl;
 }
 
 void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 {
+    cout << "imageCallback begin" << endl;
 	//red
 	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(imgae_msg, sensor_msgs::image_encodings::BGR8);
 	Mat imgOriginal = cv_ptr -> image;
@@ -136,7 +137,7 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 	flip(imgOriginal, imgCor, -1);
 
 	// calc center point
-	colorBlock3 = frameToCoordinate(3, imgCor, 170, 150, 0, 181, 256, 256);
+	colorBlock3 = frameToCoordinate(3, imgCor, 170, 150, 10, 181, 256, 256);
 
 	// publish center point
 	std_msgs::Float32MultiArray msg;
@@ -176,7 +177,9 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
         cv::rectangle(hotMap, left_point-center_offset, left_point+center_offset, Scalar(0,255,0),3,8,0);
         cv::rectangle(hotMap, right_point-center_offset, right_point+center_offset, Scalar(0,255,0),3,8,0);
 
+        cout << "depth_ptr begin" << endl;
         depth_pic = depth_ptr->image;
+        cout << "depth_ptr end" << endl;
 
         float depth_sum = 0;
         int cnt = 0;
@@ -248,6 +251,7 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
         else {
             depth_right.pose.position.x = depth_right.pose.position.y = depth_right.pose.position.z = depth_sum_right/1000.0/cnt_right;
         }
+        cout << "111 begin" << endl;
 
         putText(hotMap, "depth: "+std::to_string(depth.pose.position.x), Point(100,100),
                 FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255,0,0), 2, CV_AA);
@@ -263,6 +267,7 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
     pub.publish(depth);
     pub_left.publish(depth_left);
     pub_right.publish(depth_right);
+    cout << "imageCallback end" << endl;
 }
 
 
