@@ -47,7 +47,7 @@ geometry_msgs::PoseStamped depth_right;
 int depth_w = 640;
 int depth_h = 480;
 cv::Point2i center_offset(10, 10);
-
+bool depth_initialize = false;
 
 Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int lowv, int highh, int highs, int highv)
 {
@@ -122,14 +122,13 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 
 void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
 {
-    cout << "depth_Callback begin" << endl;
+    depth_initialize = true;
     depth_ptr = cv_bridge::toCvCopy(depth_msg, sensor_msgs::image_encodings::TYPE_32FC1);
-    cout << "depth_Callback end" << endl;
 }
 
 void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 {
-    cout << "imageCallback begin" << endl;
+    if (!depth_initialize) return; 
 	//red
 	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(imgae_msg, sensor_msgs::image_encodings::BGR8);
 	Mat imgOriginal = cv_ptr -> image;
@@ -177,9 +176,7 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
         cv::rectangle(hotMap, left_point-center_offset, left_point+center_offset, Scalar(0,255,0),3,8,0);
         cv::rectangle(hotMap, right_point-center_offset, right_point+center_offset, Scalar(0,255,0),3,8,0);
 
-        cout << "depth_ptr begin" << endl;
         depth_pic = depth_ptr->image;
-        cout << "depth_ptr end" << endl;
 
         float depth_sum = 0;
         int cnt = 0;
@@ -251,7 +248,6 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
         else {
             depth_right.pose.position.x = depth_right.pose.position.y = depth_right.pose.position.z = depth_sum_right/1000.0/cnt_right;
         }
-        cout << "111 begin" << endl;
 
         putText(hotMap, "depth: "+std::to_string(depth.pose.position.x), Point(100,100),
                 FONT_HERSHEY_SIMPLEX, 0.7, Scalar(255,0,0), 2, CV_AA);
@@ -267,7 +263,6 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
     pub.publish(depth);
     pub_left.publish(depth_left);
     pub_right.publish(depth_right);
-    cout << "imageCallback end" << endl;
 }
 
 
