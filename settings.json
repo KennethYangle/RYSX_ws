@@ -1,10 +1,10 @@
 {
     "Docs": "settings.md",
     "MODE": "RealFlight",
-    "car_velocity": 1,
+    "car_velocity": 3,
     "follow_mode": 0,
     "follow_distance": 2.5,
-    "FLIGHT_H": 3,
+    "FLIGHT_H": 3.5,
     "Utils": {
         "P": 0.5,
         "D": 0.5,

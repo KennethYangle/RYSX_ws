@@ -208,8 +208,6 @@ class Utils(object):
             print("yaw_cam: {}".format(yaw_cam))
             # cmd_yawrate = cmd_yawrate + self.Kp_yaw_cam*yaw_cam
             # cmd_yawrate = self.Kp_yaw_cam*yaw_cam
-        else:
-            cmd_yawrate = 0
 
         cmd_vel = self.sat(ref_vel_enu, 3*car_velocity)
         return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
