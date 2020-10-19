@@ -19,7 +19,7 @@ roscd offboard_pkg/shell/
 ### Analyse log
 ```
 cd PATH_TO_analyse
-python PATH_TO_LOG variables ...
+python plot_data.py PATH_TO_LOG variables ...
 # for example
 # python plot_data.py ../simulation/log/20200923_104623_sim.log rpos_est_body_raw depth rpos_est_body
 ```
