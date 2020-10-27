@@ -139,8 +139,8 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 #   src/${PROJECT_NAME}/tracker_pkg.cpp
 # )
 
-#add_library(YEAD ./YEAD/common.cpp ./YEAD/common.h ./YEAD/EllipseDetectorYaed.cpp ./YEAD/EllipseDetectorYaed.h)
-#link_libraries(YEAD)
+add_library(YEAD ./YEAD/common.cpp ./YEAD/common.h ./YEAD/EllipseDetectorYaed.cpp ./YEAD/EllipseDetectorYaed.h)
+link_libraries(YEAD)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -153,7 +153,6 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 # add_executable(${PROJECT_NAME}_node src/tracker_pkg_node.cpp)
 add_executable(listener_node src/listener.cpp)
 add_executable(commander_node src/commander.cpp)
-add_executable(point_node src/point.cpp)
 add_executable(colortrack_node src/color_track.cpp)
 
 
@@ -173,10 +172,9 @@ add_executable(colortrack_node src/color_track.cpp)
 # )
 target_link_libraries(listener_node ${catkin_LIBRARIES})
 target_link_libraries(commander_node ${catkin_LIBRARIES})
-target_link_libraries(point_node ${catkin_LIBRARIES} ${OpenCV_LIBS})
-target_link_libraries(colortrack_node ${catkin_LIBRARIES} ${OpenCV_LIBS})
+target_link_libraries(colortrack_node ${catkin_LIBRARIES} ${OpenCV_LIBS} YEAD)
 
-
+ 
 #############
 ## Install ##
 #############

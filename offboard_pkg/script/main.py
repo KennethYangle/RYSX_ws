@@ -40,12 +40,13 @@ car_home_geo = [0, 0, 0]
 pos_i = [0, 0, 0, 0, 0]
 state_name = "InitializeState"
 command = TwistStamped()
-q = Queue()
-maxQ = 100
-sumQ = 0.0
+alpha = 0.1
 home_dx, home_dy = 0, 0
 depth = -1
+depth_left = -1
+depth_right = -1
 original_offset = np.array([0, 0, 0])
+dlt_home_yaw = 0
 
 def spin():
     rospy.spin()
@@ -77,22 +78,13 @@ def car_pose_cb(msg):
     car_pos = [msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]
     q0, q1, q2, q3 = msg.pose.orientation.w, msg.pose.orientation.x, msg.pose.orientation.y, msg.pose.orientation.z
     yaw = math.atan2(2*(q0*q3+q1*q2), 1-2*(q2*q2+q3*q3))
-    if q.qsize() < maxQ:
-        sumQ += yaw
-        q.put(yaw)
-        car_yaw = sumQ / q.qsize()
-    else:
-        sumQ += yaw
-        q.put(yaw)
-        first_yaw = q.get()
-        sumQ -= first_yaw
-        car_yaw = sumQ / maxQ
+    car_yaw = alpha * yaw + (1 - alpha) * car_yaw
     # car_yaw = yaw
 
 def car_vel_cb(msg):
     global car_vel, car_vel_k, is_initialize_4
     is_initialize_4 = True
-    car_vel = [msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z]
+    car_vel = np.array([msg.twist.linear.x, msg.twist.linear.y, msg.twist.linear.z])
     car_vel_k = 0.5*np.array(car_vel) + 0.5*car_vel_k
 
 def rcin_cb(msg):
@@ -162,11 +154,20 @@ def depth_cb(msg):
     global depth
     depth = msg.pose.position.x
 
+def depth_left_cb(msg):
+    global depth_left
+    depth_left = msg.pose.position.x
+
+def depth_right_cb(msg):
+    global depth_right
+    depth_right = msg.pose.position.x
+
+
 def minAngleDiff(a, b):
     diff = a - b
     if diff < 0:
         diff += 2*np.pi
-    if diff < np.pi:
+    if diff > 0 and diff < np.pi:
         return diff
     else:
         return diff - 2*np.pi
@@ -212,6 +213,10 @@ if __name__=="__main__":
     rospy.Subscriber("mavros/home_position/home", HomePosition, mav_home_cb)
     rospy.Subscriber("mavros_ruying/home_position/home", HomePosition, car_home_cb)
     rospy.Subscriber("tracker/depth", PoseStamped, depth_cb)
+
+    rospy.Subscriber("tracker/depth_left", PoseStamped, depth_left_cb)
+    rospy.Subscriber("tracker/depth_right", PoseStamped, depth_right_cb)
+
     local_pos_pub = rospy.Publisher('mavros/setpoint_position/local', PoseStamped, queue_size=10)
     local_vel_pub = rospy.Publisher('mavros/setpoint_velocity/cmd_vel', TwistStamped, queue_size=10)
     print("Publisher and Subscriber Created")
@@ -223,7 +228,7 @@ if __name__=="__main__":
     rospy.wait_for_service("mavros/set_mode")
     set_mode_client = rospy.ServiceProxy('mavros/set_mode', SetMode)
     print("Clients Created")
-    rate = rospy.Rate(20)
+    rate = rospy.Rate(50)
     
     # ensure the connection 
     while(not current_state.connected):
@@ -275,12 +280,13 @@ if __name__=="__main__":
             if cnt % 100 == 0:
                 print("is_initialize all True")
         
-        if ch14 == 0:
-            sm.reset()
-            print("All states have been reset.")
+        # if ch14 == 0:
+        #     sm.reset()
+        #     print("All states have been reset.")
 
         if ch11 == 0:
             original_offset = np.array(car_pos) - np.array(mav_pos)
+            # dlt_home_yaw = minAngleDiff(car_home_yaw, mav_home_yaw)
             print("GPS calibration.")
 
         # if ch9 == 0 or ch9 == 2:
@@ -315,11 +321,10 @@ if __name__=="__main__":
             #     pass
 
 
-        dlt_home_yaw = minAngleDiff(car_home_yaw, mav_home_yaw)
         car_yaw_cor = angleLimiting(car_yaw - dlt_home_yaw)
-        # GPS course
-        if np.linalg.norm([car_vel_k[0], car_vel_k[1]]) > 2:
-            car_yaw_cor = np.arctan2(car_vel_k[1], car_vel_k[0])
+        # # GPS course
+        # if np.linalg.norm([car_vel_k[0], car_vel_k[1]]) > 2:
+        #     car_yaw_cor = np.arctan2(car_vel_k[1], car_vel_k[0])
         mav_local = np.array(mav_pos) - np.array(mav_home_pos)
         dif_car_mav_pos = u.GeoToENU(mav_home_geo, car_home_geo)
         ll = follow_distance if follow_mode == 0 else np.linalg.norm([dif_car_mav_pos[0], dif_car_mav_pos[1]])
@@ -331,22 +336,20 @@ if __name__=="__main__":
         dlt_mav_car_gps_enu = np.array(car_pos) - np.array(mav_pos) - original_offset
         dlt_mav_car_gps_enu[2] = FLIGHT_H-(mav_pos[2]-mav_home_pos[2])
         dlt_vel = np.array(car_vel) - np.array(mav_vel)
-        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_pos: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nrel_vel: {}\nll: {}\ncar_pos: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
-               dlt_home_yaw,     car_yaw_cor,     mav_pos, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, dlt_vel, ll, car_pos, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
-
+        print("dlt_home_yaw: {}\ncar_yaw_cor: {}\nmav_yaw: {}\nmav_pos: {}\nmav_vel: {}\nmav_home_pos: {}\nmav_local: {}\ncar_home_geo: {}\nmav_home_geo: {}\ndif_car_mav_pos: {}\nrel_vel: {}\nll: {}\ncar_pos: {}\ncar_vel: {}\ncar_home_pos: {}\ncar_local: {}\nvirtual_car_pos: {}\ndlt_mav_car_gps_enu: {}\ndlt_mav_car_gps_enu_origin: {}\noriginal_offset: {}".format(
+               dlt_home_yaw,     car_yaw_cor,   mav_yaw,     mav_pos, mav_vel, mav_home_pos, mav_local, car_home_geo, mav_home_geo, dif_car_mav_pos, dlt_vel, ll, car_pos, car_vel, car_home_pos, car_local, virtual_car_pos, dlt_mav_car_gps_enu, dlt_mav_car_gps_enu_origin, original_offset))
         
         dlt_yaw = minAngleDiff(car_yaw_cor, mav_yaw)
         keys = [ch5, ch6, ch7, ch8]
         pos_info = {"mav_pos": mav_pos, "mav_vel": mav_vel, "mav_yaw": mav_yaw, "mav_R": mav_R, "mav_home_pos": mav_home_pos, 
-                    "mav_home_yaw": mav_home_yaw, "car_home_pos": car_home_pos, "rel_pos": dlt_pos, "rel_vel": dlt_vel, 
+                    "mav_home_yaw": mav_home_yaw, "car_home_pos": car_home_pos, "car_vel": car_vel, "rel_pos": dlt_pos, "rel_vel": dlt_vel, 
                     "rel_yaw": dlt_yaw, "dlt_mav_car_gps_enu": dlt_mav_car_gps_enu, "virtual_car_pos": virtual_car_pos, 
                     "R_bc": np.array([[1,0,0], [0,0,1], [0,-1,0]]), "FLIGHT_H": FLIGHT_H}
-        print("car_yaw_cor: {}, mav_yaw: {}".format(car_yaw_cor, mav_yaw))
         if pos_i[0] > 0:
             print("pos_i: {}".format(pos_i))
             print("depth: {}".format(depth))
 
-        cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity)
+        cmd = sm.update(keys, is_initialize_finish, pos_info, pos_i, depth, depth_left, depth_right, car_velocity)
         # cmd = sm.update(keys, is_initialize_finish, pos_info, [0,0,0,0,0], depth, car_velocity)
         print("cmd: {}".format(cmd))
         if cmd is not None:

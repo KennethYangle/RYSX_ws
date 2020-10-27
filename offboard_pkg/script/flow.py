@@ -16,7 +16,7 @@ class InitializeState(object):
         self.stateMachine.setState(self.stateMachine.getIdleState())
     def takeoff(self, pos_info):
         print("cannot takeoff, waiting for initialize.")
-    def approach(self, pos_info, pos_i, depth, car_velocity):
+    def approach(self, pos_info, pos_i, depth, depth_left, depth_right, car_velocity):
         print("Warning , waiting for initialize.")
     def go_home(self, pos_info):
         self.stateMachine.setState(self.stateMachine.getHomewardState())
@@ -36,7 +36,7 @@ class IdleState(object):
         pass
     def takeoff(self, pos_info):
         self.stateMachine.setState(self.stateMachine.getTakeoffState())
-    def approach(self, pos_info, pos_i, depth, car_velocity):
+    def approach(self, pos_info, pos_i, depth, depth_left, depth_right, car_velocity):
         # if pos_i > 1:
         #     self.stateMachine.setState(self.stateMachine.getDockingState())
         self.stateMachine.setState(self.stateMachine.getDockingState())
@@ -85,8 +85,8 @@ class DockingState(object):
         pass
     def go_home(self, pos_info):
         self.stateMachine.setState(self.stateMachine.getHomewardState())
-    def approach(self, pos_info, pos_i, depth, car_velocity):
-        cmd = self.stateMachine.util.DockingControllerFusion(pos_info, pos_i, depth, car_velocity)
+    def approach(self, pos_info, pos_i, depth, depth_left, depth_right, car_velocity):
+        cmd = self.stateMachine.util.DockingControllerFusion(pos_info, pos_i, depth, depth_left, depth_right, car_velocity)
         return cmd
     def flightInward(self, pos, geo_fence):
         print("Warning! Out of the geographic fence during the docking.")
@@ -216,7 +216,7 @@ class StateMachine(object):
         self.state = state
         self.state_name = state.state_name
 
-    def update(self, keys, is_initialize_finish, pos_info, pos_i, depth, car_velocity):
+    def update(self, keys, is_initialize_finish, pos_info, pos_i, depth, depth_left, depth_right, car_velocity):
         """
         - keys: 按键状态
         - is_initialize_finish: externally subscribed
@@ -259,4 +259,4 @@ class StateMachine(object):
                 self.state.initializeFinished()
 
         if self.start_key >= 1:
-            return self.state.approach(pos_info, pos_i, depth, car_velocity)
+            return self.state.approach(pos_info, pos_i, depth, depth_left, depth_right, car_velocity)

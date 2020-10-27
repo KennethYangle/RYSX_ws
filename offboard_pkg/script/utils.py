@@ -13,6 +13,7 @@ class Utils(object):
         self.Eb = params["Eb"]
         self.saftyz = params["saftyz"]
         self.USE_CAM_FOR_X = params["USE_CAM_FOR_X"]
+        self.USE_DEPTH_FOR_X = params["USE_DEPTH_FOR_X"]
         self.GPS_SLIDING = params["GPS_SLIDING"]
         self.we_gps = np.array(params["we_gps"])
         self.we_realsense = params["we_realsense"]
@@ -39,6 +40,9 @@ class Utils(object):
         self.rsense_gps2_err = 0
         self.rsense_gps2_err_kp = 0.5
         self.RSENSE_GPS_COM = params["RSENSE_GPS_COM"]
+        self.I_saturation_limit = params["I_saturation_limit"]
+        self.Kp_lr_depth = params["Kp_lr_depth"]
+
 
     def sat(self, a, maxv):
         n = np.linalg.norm(a)
@@ -52,7 +56,7 @@ class Utils(object):
         cmd_yawrate = self.sat(self.P*(pos_info["mav_home_yaw"]-pos_info["mav_yaw"]), 2)
         return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
 
-    def DockingControllerFusion(self, pos_info, pos_i, depth, car_velocity):
+    def DockingControllerFusion(self, pos_info, pos_i, depth, depth_left, depth_right, car_velocity):
         # GPS+IMU failed
         if pos_info["mav_pos"] == 0:
             return [0,0,0,0]
@@ -69,20 +73,26 @@ class Utils(object):
         track_quality = pos_i[4] # pos_i[4] is quality, range from 0 to 1
         print("track_quality: {}".format(track_quality))
         # lowpass filter
-        if track_quality > 0.75:
-            track_quality = 1.0
-        elif track_quality < 0.2:
-            track_quality = 0
-        self.track_quality_k = self.track_quality_k + 0.2*(track_quality - self.track_quality_k)
+        # if track_quality > 0.75:
+        #     track_quality = 1.0
+        # elif track_quality < 0.2:
+        #     track_quality = 0
+        self.track_quality_k = self.track_quality_k + 0.1*(track_quality - self.track_quality_k)
         print("track_quality_k: {}".format(self.track_quality_k))
 
         # Use camera information when tracking close and having good tracking quality.
-        if track_quality > 0.3:
+        if self.track_quality_k > 0.3:
             cam_is_ok = True
         # When RealSense is available, the return depth is greater than 0.
         if depth > 0:
             realsense_is_ok = True
-        
+
+        # difference between left depth with right depth
+        depth_delta = 0
+        if depth_left > 0 and depth_right > 0:
+            #if depth_delta >0  roll to right
+            depth_delta = depth_right - depth_left
+        print("depth_delta: {}".format(depth_delta))
         
         # Is use cam compensate GPS.
         if self.CAM_GPS_COM:
@@ -128,12 +138,20 @@ class Utils(object):
         dlt_pos = self.rpos_est_k + pos_info["virtual_car_pos"]
         print("dlt_pos: {}".format(dlt_pos))
         
-        self.integral = self.integral + self.Ki.dot(dlt_pos)*dt
+        dlt_pos_body = pos_info["mav_R"].T.dot(dlt_pos)
+        if np.linalg.norm(pos_info["car_vel"]) > 2:
+            self.integral = self.integral + self.Ki.dot(dlt_pos_body)*dt
         # integral saturation
-        self.SatIntegral(self.integral, 0.5, -0.5)
+        self.SatIntegral(self.integral, self.I_saturation_limit, -self.I_saturation_limit)
 
         # PID controller
-        ref_vel_enu = self.Kp.dot(dlt_pos) + self.integral + self.D*np.array(pos_info["rel_vel"])
+        P_component = self.Kp.dot(dlt_pos_body)
+        I_component = self.integral
+        D_component = self.D*np.array(pos_info["mav_R"].T.dot(pos_info["rel_vel"]))
+        F_component = pos_info["mav_R"].T.dot(pos_info["car_vel"])
+        ref_vel_body = P_component + I_component + D_component + F_component
+        print("P_component: {}\nI_component: {}\nD_component: {}\nF_component: {}".format(P_component, I_component, D_component, F_component))
+        ref_vel_enu = pos_info["mav_R"].dot(ref_vel_body)
         if not self.USE_GPS:
             ref_vel_enu = np.array([0, 0, 0])
         print("ref_vel_enu: {}".format(ref_vel_enu))
@@ -141,6 +159,7 @@ class Utils(object):
         # camera controller
         if not self.USE_CAMERA:
             cam_is_ok = False
+            self.track_quality_k = 0
         if cam_is_ok:
             self.integral =np.array([0, 0, 0])
             i_err = np.array([pos_i[0] - self.WIDTH/2, pos_i[1] - self.HEIGHT/2, 0])
@@ -158,10 +177,12 @@ class Utils(object):
             # PI
             self.integral_cam = self.integral_cam + self.Ki_nu_cam.dot(i_err_body)*dt
             self.SatIntegral(self.integral_cam, 0.5, -0.5)
-            self.ref_vel_cam_body = self.Kp_nu_cam.dot(i_err_body) + self.integral_cam
+            self.ref_vel_cam_body = (self.Kp_nu_cam.dot(i_err_body) + self.integral_cam) * np.linalg.norm(self.rpos_est_k)
             # Is use camera information to control the body's lateral speed.
             if not self.USE_CAM_FOR_X:
                 self.ref_vel_cam_body[0] = 0
+            if self.USE_DEPTH_FOR_X:
+                self.ref_vel_cam_body[0] = self.sat(self.Kp_lr_depth * depth_delta, 0.5)
             self.ref_vel_cam_body[1] = 0
             print("ref_vel_cam_body: {}".format(self.ref_vel_cam_body))
             # ref_vel_cam_enu = pos_info["mav_R"].dot(ref_vel_cam_body + self.cam_offset)
@@ -170,7 +191,8 @@ class Utils(object):
             # ref_vel_enu = (1 - self.track_quality_k) * ref_vel_enu + self.track_quality_k * ref_vel_cam_enu
             ref_vel_body = pos_info["mav_R"].T.dot(ref_vel_enu)
             print("ref_vel_body_gps: {}".format(ref_vel_body))
-            ref_vel_body[0] = (1 - self.track_quality_k) * ref_vel_body[0] + self.track_quality_k * self.ref_vel_cam_body[0]
+            if self.USE_CAM_FOR_X or self.USE_DEPTH_FOR_X:
+                ref_vel_body[0] = (1 - self.track_quality_k) * ref_vel_body[0] + self.track_quality_k * self.ref_vel_cam_body[0]
             ref_vel_body[2] = (1 - self.track_quality_k) * ref_vel_body[2] + self.track_quality_k * self.ref_vel_cam_body[2]
             print("ref_vel_body_cam: {}".format(ref_vel_body))
             ref_vel_enu = pos_info["mav_R"].dot(ref_vel_body)
@@ -184,7 +206,10 @@ class Utils(object):
         if cam_is_ok:
             yaw_cam = -i_err[0]
             print("yaw_cam: {}".format(yaw_cam))
-            cmd_yawrate = cmd_yawrate + self.Kp_yaw_cam*yaw_cam
+            # cmd_yawrate = cmd_yawrate + self.Kp_yaw_cam*yaw_cam
+            # cmd_yawrate = self.Kp_yaw_cam*yaw_cam
+        else:
+            cmd_yawrate = 0
 
         cmd_vel = self.sat(ref_vel_enu, 3*car_velocity)
         return [cmd_vel[0], cmd_vel[1], cmd_vel[2], cmd_yawrate]
