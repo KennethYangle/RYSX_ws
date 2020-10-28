@@ -30,7 +30,7 @@ def talker():
     car_pos = PoseStamped()
     car_vel = TwistStamped()
     pos_image = Float32MultiArray()
-    car_yaw = np.pi/3
+    car_yaw = 0
 
     car_vel.twist.linear.y = 0
     car_vel.twist.angular.z = 0
@@ -62,16 +62,17 @@ def talker():
     # car_pos.pose.position.z -= dlt_home_pos[2]
 
     cnt = 0
+    vv = 2
     while not rospy.is_shutdown():
         if cnt < 500:
             car_vel.twist.linear.x = 0
-        elif cnt < 6000:
-            car_vel.twist.linear.x = 1
-        elif cnt < 6200:
+        elif cnt < 3000:
+            car_vel.twist.linear.x = vv
+        elif cnt < 3200:
             car_vel.twist.linear.x = 0
-            car_yaw = -2*np.pi/3
+            car_yaw = np.pi
         else:
-            car_vel.twist.linear.x = -1
+            car_vel.twist.linear.x = -vv
         #计算距离
         car_pos.pose.position.x += car_vel.twist.linear.x * interval_time
         car_pos.pose.position.y += car_vel.twist.linear.y * interval_time

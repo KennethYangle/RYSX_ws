@@ -22,14 +22,14 @@ def image_callback(data):
     img_pos = Float32MultiArray()
     cv_img = bridge.imgmsg_to_cv2(data, "bgr8")
     hue_image = cv2.cvtColor(cv_img, cv2.COLOR_BGR2HSV)
-    low_range = np.array([0, 230, 80])
-    high_range = np.array([5, 256, 200])
+    low_range = np.array([0, 200, 50])
+    high_range = np.array([5, 256, 256])
     th = cv2.inRange(hue_image, low_range, high_range)
     dilated = cv2.dilate(th, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3)), iterations=2)
     cv2.imshow("hsv", dilated)
     cv2.waitKey(1)
     M = cv2.moments(dilated, binaryImage = True)
-    if M["m00"] != 0:
+    if M["m00"] > 100:
         img_pos.data = [int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]), np.sqrt(2*M["m00"]), np.sqrt(2*M["m00"]), 0.8]
     else:
         img_pos.data = [0, 0, 0, 0, 0]

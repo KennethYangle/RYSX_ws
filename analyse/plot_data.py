@@ -6,6 +6,14 @@ import matplotlib.pyplot as plt
 
 
 def main(args):
+    tmin = 0
+    tmax = 1e10
+    if args.time is not None:
+        trange = [float(a) for a in re.findall(r'-?\d+\.?\d*e?[-+]?\d*', args.time)]
+        tmin = trange[0]
+        if len(trange) == 2:
+            tmax = trange[1]
+
     f = open(args.log)
     lines = f.readlines() 
     nvar = len(args.variable)
@@ -19,6 +27,8 @@ def main(args):
             if line.startswith("time:"):
                 tmp = [float(a) for a in re.findall(r'-?\d+\.?\d*e?[-+]?\d*', line)]
                 time = tmp[0]
+            if time < tmin or time > tmax:
+                continue
             if line.startswith(args.variable[v]+":"):
                 tmp = [float(a) for a in re.findall(r'-?\d+\.?\d*e?[-+]?\d*', line)]
                 # print(tmp)
@@ -76,6 +86,7 @@ if __name__ == "__main__":
     parser.add_argument('-p', '--plotxy', action='store_true', help='draw a 2-dimensional graph')
     parser.add_argument('-l', '--linewidth', default=2, type=float, help='line width')
     parser.add_argument('-r', '--range', default=None, help='axises range, work with plotxy. usage: "xmin xmax ymin ymax"')
+    parser.add_argument('-t', '--time', default=None, help='time range. usage: "tmin tmax" or tmin')
     args = parser.parse_args()
     print(args)
     main(args)
