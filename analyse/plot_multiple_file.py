@@ -45,7 +45,10 @@ def main(args):
 
     if args.plotxy:
         for l in range(nlog):
-            plt.plot(datas[l][0], datas[l][1], label="{}".format(os.path.basename(args.log[l]).split(".")[0]), linewidth=args.linewidth)
+            if args.label is not None:
+                plt.plot(datas[l][0], datas[l][1], label=args.label[l], linewidth=args.linewidth)
+            else:
+                plt.plot(datas[l][0], datas[l][1], label="{}".format(os.path.basename(args.log[l]).split(".")[0]), linewidth=args.linewidth)
         if args.range is not None:
             arange = [float(a) for a in re.findall(r'-?\d+\.?\d*e?[-+]?\d*', args.range)]
             plt.axis(arange)
@@ -62,7 +65,10 @@ def main(args):
         for i in range(len(datas[0])):
             plt.figure(i)
             for l in range(nlog):
-                plt.plot(index[l], datas[l][i], label="{}".format(os.path.basename(args.log[l]).split(".")[0]), linewidth=args.linewidth)
+                if args.label is not None:
+                    plt.plot(index[l], datas[l][i], label=args.label[l], linewidth=args.linewidth)
+                else:
+                    plt.plot(index[l], datas[l][i], label="{}".format(os.path.basename(args.log[l]).split(".")[0]), linewidth=args.linewidth)
             if args.title is not None:
                 plt.title(args.title)
             if args.xlabel is not None:
@@ -82,6 +88,7 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--linewidth', default=2, type=float, help='line width')
     parser.add_argument('-r', '--range', default=None, help='axises range, work with plotxy. usage: "xmin xmax ymin ymax"')
     parser.add_argument('-t', '--time', default=None, help='time range. usage: "tmin tmax" or tmin')
+    parser.add_argument('--label', nargs='+', default=None, help='curve labels')
     parser.add_argument('--title', default=None, help='figure title')
     parser.add_argument('--xlabel', default=None, help='x label')
     parser.add_argument('--ylabel', default=None, help='y label')

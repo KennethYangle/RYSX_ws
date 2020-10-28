@@ -5,7 +5,8 @@ build/
 cmake-build-debug/
 devel/
 *.zip
-*log*
+simulation/log/
+offboard/log/
 data.mat
 *.pyc
 *.bag
