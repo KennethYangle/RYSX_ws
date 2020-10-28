@@ -35,7 +35,10 @@ def main(args):
                 if data_len[v]==0:
                     data_len[v] = len(tmp)
                 if data_len[v]!=0 and len(tmp) == data_len[v]:
-                    raw_datas[v].append(tmp)
+                    if args.norm:
+                        raw_datas[v].append([np.linalg.norm(tmp)])
+                    else:
+                        raw_datas[v].append(tmp)
                     index[v].append(time)
         cnt += 1
     print(data_len)
@@ -84,6 +87,7 @@ if __name__ == "__main__":
     parser.add_argument('variable', nargs='+', help='variable to plot')
     parser.add_argument('-s', '--self', action='store_true', help='draw the various components of the variable on a figure')
     parser.add_argument('-p', '--plotxy', action='store_true', help='draw a 2-dimensional graph')
+    parser.add_argument('-n', '--norm', action='store_true', help="calc the norm of variable")
     parser.add_argument('-l', '--linewidth', default=2, type=float, help='line width')
     parser.add_argument('-r', '--range', default=None, help='axises range, work with plotxy. usage: "xmin xmax ymin ymax"')
     parser.add_argument('-t', '--time', default=None, help='time range. usage: "tmin tmax" or tmin')

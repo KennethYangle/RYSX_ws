@@ -69,6 +69,9 @@ def main(args):
                     plt.plot(index[l], datas[l][i], label=args.label[l], linewidth=args.linewidth)
                 else:
                     plt.plot(index[l], datas[l][i], label="{}".format(os.path.basename(args.log[l]).split(".")[0]), linewidth=args.linewidth)
+            if args.range is not None:
+                arange = [float(a) for a in re.findall(r'-?\d+\.?\d*e?[-+]?\d*', args.range)]
+                plt.axis(arange)
             if args.title is not None:
                 plt.title(args.title)
             if args.xlabel is not None:
