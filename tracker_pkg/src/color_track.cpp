@@ -13,6 +13,8 @@
 #include <fstream>
 #include <opencv/cv.hpp>
 
+#include "../YEAD/EllipseDetectorYaed.h"
+
 using namespace cv;
 using namespace std;
 
@@ -25,7 +27,7 @@ Point2d trackPoint;
 int test = 10;
 float sigmax;
 float sigmay;
-Point2d colorBlock3;
+Point3d colorBlock3;
 float average_radius = 0;
 ros::Publisher centerPointPub;
 
@@ -49,9 +51,9 @@ int depth_h = 480;
 cv::Point2i center_offset(10, 10);
 bool depth_initialize = false;
 
-Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int lowv, int highh, int highs, int highv)
+Point3d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int lowv, int highh, int highs, int highv)
 {
-	Point2d xy;
+	Point3d xy;
 	Mat imgHSV;
 	vector<Mat> hsvSplit;
 	cvtColor(frame, imgHSV, COLOR_BGR2HSV);
@@ -63,20 +65,20 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	Mat imgThresholded;
 	inRange(imgHSV, Scalar(lowh, lows, lowv), Scalar(highh, highs, highv), imgThresholded); //Threshold the image
 
-	//开操作 (去除一些噪点)
-	Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
-	morphologyEx(imgThresholded, imgThresholded, MORPH_OPEN, element);
-	//闭操作
-	Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(9, 9));
-    morphologyEx(imgThresholded, imgThresholded, MORPH_CLOSE, kernel);
+	// //开操作 (去除一些噪点)
+	// Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
+	// morphologyEx(imgThresholded, imgThresholded, MORPH_OPEN, element);
+	// //闭操作
+	// Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(9, 9));
+    // morphologyEx(imgThresholded, imgThresholded, MORPH_CLOSE, kernel);
 	imshow("red block", imgThresholded);
 	
-
+    ros::Time begin = ros::Time::now();
 	vector<Vec3f> circles;
 
 	HoughCircles(imgThresholded, circles, CV_HOUGH_GRADIENT, 
 					3, //累加器分辨率
-					50, //两园间最小距离
+					20, //两园间最小距离
 					160, // canny高阈值
 					80, //最小通过数
 					30, 300 );  //最小和最大半径
@@ -116,9 +118,104 @@ Point2d frameToCoordinate(int colortype,  Mat frame, int lowh, int lows, int low
 	}
 	
 	imshow("circle", frame);
+    ros::Time end = ros::Time::now();
+    cout<< "------------------time cost :"<< end-begin <<endl;
 	waitKey(1);
-	return centexy;
+    Point3d return_centerxy;
+    return_centerxy.x = centexy.x;
+    return_centerxy.y = centexy.y;
+    return_centerxy.z = average_radius;
+	return return_centerxy;
 }
+
+//yead circle 
+Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int highs, int highv)
+{
+    ros::Time begin = ros::Time::now();
+    Point3d xy;
+	Mat imgHSV;
+	vector<Mat> hsvSplit;
+	cvtColor(frame, imgHSV, COLOR_BGR2HSV);
+	//Convert the captured frame from BGR to HSV
+    
+	split(imgHSV, hsvSplit);
+	equalizeHist(hsvSplit[2], hsvSplit[2]);
+	merge(hsvSplit, imgHSV);
+	Mat1b imgThresholded;
+	inRange(imgHSV, Scalar(lowh, lows, lowv), Scalar(highh, highs, highv), imgThresholded); //Threshold the image
+    ros::Time end = ros::Time::now();
+    cout<< "------------------time cost :"<< end-begin <<endl;
+	
+	// //开操作 (去除一些噪点)
+	// Mat element = getStructuringElement(MORPH_RECT, Size(3, 3));
+	// morphologyEx(imgThresholded, imgThresholded, MORPH_OPEN, element);
+    // ros::Time end2 = ros::Time::now();
+    // cout<< "------------------time cost2 :"<< end2-begin <<endl;
+	// //闭操作
+	// Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
+    // morphologyEx(imgThresholded, imgThresholded, MORPH_CLOSE, kernel);
+    // ros::Time end3 = ros::Time::now();
+    // cout<< "------------------time cost3 :"<< end3-begin <<endl;
+	imshow("red block", imgThresholded);
+    
+    // Parameters Settings (Sect. 4.2)
+    int		iThLength = 6;
+    float	fThObb = 4.0f;
+    float	fThPos = 1.0f;
+    float	fTaoCenters = 0.05f;
+    int 	iNs = 16;
+    float	fMaxCenterDistance = sqrt(float(640*640 + 480*480)) * fTaoCenters;
+    float	fThScoreScore = 0.1f;
+    // Gaussian filter parameters, in pre-processing
+    Size	szPreProcessingGaussKernelSize = Size(5, 5);
+    double	dPreProcessingGaussSigma = 1.0;
+
+    float	fDistanceToEllipseContour = 0.1f;	// (Sect. 3.3.1 - Validation)
+    float	fMinReliability = 0.2f;	// Const parameters to discard bad ellipses
+    // Initialize Detector with selected parameters
+    CEllipseDetectorYaed* yaed = new CEllipseDetectorYaed();
+    yaed->SetParameters(szPreProcessingGaussKernelSize,
+                        dPreProcessingGaussSigma,
+                        fThPos,
+                        fMaxCenterDistance,
+                        iThLength,
+                        fThObb,
+                        fDistanceToEllipseContour,
+                        fThScoreScore,
+                        fMinReliability,
+                        iNs
+    );
+    // Detect
+    // cv::threshold(frame_rgb_l,frame_rgb_l,200,255,THRESH_BINARY);
+    
+    
+    
+    vector<Ellipse> ellsYaed;
+    // Mat1b gray2 = frame_rgb_l.clone();
+    yaed->Detect(imgThresholded, ellsYaed);
+
+    
+    
+
+    cv::Mat3b output_frame;
+    output_frame = frame.clone();
+    xy = yaed->DrawDetectedEllipses(output_frame,ellsYaed,5);
+    
+
+    // imshow("Demo",frame);
+    // imshow("frame_rgb_l",frame_rgb_l);
+    imshow("output_frame",output_frame);
+    
+    int c = cvWaitKey(1);
+    if(c == (int)' ')
+    {
+        cvWaitKey(0);
+    }
+
+    return xy;
+}
+
+
 
 void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
 {
@@ -129,21 +226,27 @@ void depth_Callback(const sensor_msgs::ImageConstPtr &depth_msg)
 void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 {
     if (!depth_initialize) return; 
+    ros::Time begin_image = ros::Time::now();
 	//red
 	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(imgae_msg, sensor_msgs::image_encodings::BGR8);
 	Mat imgOriginal = cv_ptr -> image;
 	Mat imgCor;
 	flip(imgOriginal, imgCor, -1);
+    ros::Time end_image1 = ros::Time::now();
+    // cout<< "------------------time cost1 :"<< end_image1-begin_image <<endl;
 
 	// calc center point
-	colorBlock3 = frameToCoordinate(3, imgCor, 170, 150, 10, 181, 256, 256);
-
+	// colorBlock3 = frameToCoordinate(3, imgCor, 170, 150, 10, 181, 256, 256);
+    colorBlock3 = yeadCircleCalc(imgCor, 170, 150, 10, 181, 256, 256);
+    
+    ros::Time end_image2 = ros::Time::now();
+    // cout<< "------------------time cost2 :"<< end_image2-begin_image <<endl;
 	// publish center point
 	std_msgs::Float32MultiArray msg;
 	msg.data.push_back(colorBlock3.x);   // x
 	msg.data.push_back(colorBlock3.y);   // y
-	msg.data.push_back(average_radius);   // bbox_w
-	msg.data.push_back(average_radius);   // bbox_h
+	msg.data.push_back(colorBlock3.z);   // bbox_w
+	msg.data.push_back(colorBlock3.z);   // bbox_h
 	msg.data.push_back(confidence);   // confidence
 	centerPointPub.publish(msg);
 	cout << "centerxy: " << colorBlock3 << endl;
@@ -151,9 +254,9 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 	// center_point, left_point and right_point
 	center_point.x = (int)colorBlock3.x;
     center_point.y = (int)colorBlock3.y;
-    left_point.x = center_point.x - (average_radius/2);
+    left_point.x = center_point.x - (colorBlock3.z/2);
     left_point.y = center_point.y;
-    right_point.x = center_point.x + (average_radius/2);
+    right_point.x = center_point.x + (colorBlock3.z/2);
     right_point.y = center_point.y;
 	
 	// calc depth
@@ -263,6 +366,8 @@ void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
     pub.publish(depth);
     pub_left.publish(depth_left);
     pub_right.publish(depth_right);
+    ros::Time end_image3 = ros::Time::now();
+    // cout<< "------------------time cost3 :"<< end_image3-begin_image <<endl;
 }
 
 
@@ -282,4 +387,6 @@ int main(int argc, char** argv)
     centerPointPub = nh.advertise<std_msgs::Float32MultiArray>("tracker/pos_image",1);
 	//订阅图像
 	ros::spin();
+
+
 }
