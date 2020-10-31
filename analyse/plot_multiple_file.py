@@ -59,6 +59,8 @@ def main(args):
         if args.ylabel is not None:
             plt.ylabel(args.ylabel)
         plt.legend()
+        if args.grid:
+            plt.grid()
         plt.show()
 
     if not args.self and not args.plotxy:
@@ -79,6 +81,8 @@ def main(args):
             if args.ylabel is not None:
                 plt.ylabel(args.ylabel)
             plt.legend()
+            if args.grid:
+                plt.grid()
         plt.show()
 
 
@@ -88,6 +92,7 @@ if __name__ == "__main__":
     parser.add_argument('variable', help='variable to plot')
     parser.add_argument('-s', '--self', action='store_true', help='draw the various components of the variable on a figure')
     parser.add_argument('-p', '--plotxy', action='store_true', help='draw a 2-dimensional graph')
+    parser.add_argument('-g', '--grid', action='store_true', help='show grid')
     parser.add_argument('-l', '--linewidth', default=2, type=float, help='line width')
     parser.add_argument('-r', '--range', default=None, help='axises range, work with plotxy. usage: "xmin xmax ymin ymax"')
     parser.add_argument('-t', '--time', default=None, help='time range. usage: "tmin tmax" or tmin')
