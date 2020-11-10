@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch> 
+  <node pkg="off_board_test" type="off_board_test" name="off_board_test" respawn="false" output="screen">
+  <!--remap from="cmd_vel_smoothed" to="cmd_vel_manual"/--> 
+  </node>
+</launch>
