@@ -154,6 +154,7 @@ link_libraries(YEAD)
 add_executable(listener_node src/listener.cpp)
 add_executable(commander_node src/commander.cpp)
 add_executable(colortrack_node src/color_track.cpp)
+add_executable(xuanting_node src/xuanting_vision.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -173,7 +174,7 @@ add_executable(colortrack_node src/color_track.cpp)
 target_link_libraries(listener_node ${catkin_LIBRARIES})
 target_link_libraries(commander_node ${catkin_LIBRARIES})
 target_link_libraries(colortrack_node ${catkin_LIBRARIES} ${OpenCV_LIBS} YEAD)
-
+target_link_libraries(xuanting_node ${catkin_LIBRARIES} ${OpenCV_LIBS} YEAD)
  
 #############
 ## Install ##
