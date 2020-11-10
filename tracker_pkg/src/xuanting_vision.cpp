@@ -271,7 +271,8 @@ Point3d yeadCircleCalc(Mat frame, int lowh, int lows, int lowv, int highh, int h
 
 void imageCallback(const sensor_msgs::Image::ConstPtr &imgae_msg)
 {
-    // if (!depth_initialize) return; 
+
+    // if (!depth_initialize) return; sss
     // ros::Time begin_image = ros::Time::now();
 	//red
 	cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(imgae_msg, sensor_msgs::image_encodings::BGR8);
